@@ -1,19 +1,17 @@
 import pkg from "pg";
 const { Pool } = pkg;
+import 'dotenv/config';
 
 const pool = new Pool({
-  user: "postgres",
-  host: "db.cewbdpdgfpnzuprcuezh.supabase.co",
-  database: "postgres",
-  password: "Genitah2026!",
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false,
-  },
+    rejectUnauthorized: false
+  }
 });
 
+
 pool.connect()
-  .then(() => console.log("🚀 Connecté à Supabase PostgreSQL"))
-  .catch(err => console.error("❌ Erreur :", err.message));
+  .then(() => console.log("✅ Connecté à PostgreSQL"))
+  .catch(err => console.error("❌ Erreur :", err));
 
 export default pool;
