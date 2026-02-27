@@ -65,7 +65,18 @@ function Home() {
     <div className="bg-gray-50 min-h-screen font-sans">
 
       {/* HERO SECTION */}
-      <section className="relative text-center py-24 bg-white overflow-hidden">
+      <section className="relative text-center py-24 overflow-hidden">
+        {/* Conteneur de l'image d'arrière-plan */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/images/Maison.jpg" 
+            alt="Intérieur maison" 
+            className="w-full h-full object-cover scale-110" 
+          />
+          {/* Voile léger pour faire ressortir le texte */}
+          <div className="absolute inset-0 bg-white/40"></div>
+        </div>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -75,7 +86,7 @@ function Home() {
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'Playfair Display' }}>
             Sublimez votre <span className="text-[#ada194] italic" style={{ fontFamily: 'adorable' }}>Intérieur</span>
           </h1>
-          <p className="mt-6 text-gray-500 text-lg md:text-xl max-w-2xl mx-auto font-light">
+          <p className="mt-6 text-gray-800 text-lg md:text-xl max-w-2xl mx-auto font-medium">
             Découvrez notre collection exclusive de meubles modernes, alliant confort absolu et design intemporel.
           </p>
 
