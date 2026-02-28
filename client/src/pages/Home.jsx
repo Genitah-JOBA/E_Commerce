@@ -84,7 +84,7 @@ function Home() {
           className="relative z-10 px-6"
         >
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 tracking-tight" style={{ fontFamily: 'Playfair Display' }}>
-            Sublimez votre <span className="text-[#ada194] italic" style={{ fontFamily: 'adorable' }}>Intérieur</span>
+            Sublimez votre <span className="text-black italic" style={{ fontFamily: 'adorable' }}>Intérieur</span>
           </h1>
           <p className="mt-6 text-gray-800 text-lg md:text-xl max-w-2xl mx-auto font-medium">
             Découvrez notre collection exclusive de meubles modernes, alliant confort absolu et design intemporel.

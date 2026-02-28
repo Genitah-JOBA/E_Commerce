@@ -3,7 +3,7 @@
 
 @font-face {
   font-family: 'adorable';
-  src: url('/fonts/Adorable.woff2') format('woff2'); /* Assurez-vous du chemin du fichier */
+  src: url('/fonts/Adorable.woff') format('woff'); /* Assurez-vous du chemin du fichier */
   font-weight: normal;
   font-style: normal;
 }

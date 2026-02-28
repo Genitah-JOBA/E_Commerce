@@ -64,7 +64,7 @@ const Navbar = () => {
               </>
             )
           ) : (
-            <Link to="/products" className={linkClass}>Produits</Link>
+            <Link to="/products" className={linkClass}><Package size={18} />Produits</Link>
           )}
 
           {/* Bouton Auth Desktop */}
