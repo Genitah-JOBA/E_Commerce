@@ -13,7 +13,10 @@ dotenv.config();
 const app = express();
 
 // 3. Middlewares (La configuration de base)
-app.use(cors());
+app.use(cors({
+  origin: "https://auraprivefrontend.vercel.app", // L'URL de ton site Vercel
+  credentials: true
+}));
 app.use(express.json()); // Indispensable pour lire le JSON envoyé par le client
 
 // 4. Tes Routes (Après l'initialisation de app)
