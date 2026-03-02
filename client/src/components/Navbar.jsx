@@ -8,7 +8,8 @@ import {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null); // Ajout d'un state
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false); // État pour la MessageBox
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,20 +20,20 @@ const Navbar = () => {
   }, []);
 
   const isAdmin = currentUser && currentUser.role === "admin";
-  
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = currentUser; // Utilisation du state pour la réactivité
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsOpen(false);
+    setShowLogoutModal(false);
     navigate("/auth");
   };
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  // Styles communs pour les liens pour éviter la répétition
-  const linkClass = "flex items-center gap-2 hover:text-[#f3e6d8] transition-colors duration-300 py-2 md:py-0";
+  // Styles communs : ajout de cursor-pointer
+  const linkClass = "flex items-center gap-2 hover:text-[#f3e6d8] transition-colors duration-300 py-2 md:py-0 cursor-pointer";
 
   return (
     <motion.nav 
@@ -41,11 +42,42 @@ const Navbar = () => {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="sticky top-0 z-50 bg-[#ada194] text-white p-4 shadow-lg"
     >
+      {/* --- MESSAGEBOX DE DÉCONNEXION --- */}
+      <AnimatePresence>
+        {showLogoutModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full text-black mx-4"
+            >
+              <h3 className="text-xl font-bold mb-4">Déconnexion</h3>
+              <p className="text-gray-600 mb-6">Êtes-vous sûr de vouloir vous déconnecter de votre compte Aura Privé ?</p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowLogoutModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-semibold hover:bg-gray-100 cursor-pointer transition"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={confirmLogout}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 cursor-pointer transition"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="container mx-auto flex justify-between items-center">
         
         {/* Logo */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 1 }}>
-          <Link to="/" className="text-black flex items-center whitespace-nowrap text-3xl font-stylish tracking-tight transition hover:opacity-60">
+          <Link to="/" className="text-black flex items-center whitespace-nowrap text-3xl font-stylish tracking-tight transition hover:opacity-60 cursor-pointer">
             <span style={{ fontFamily: 'adorable', fontSize: '1.875rem', lineHeight: '1' }}>Aura</span>
             <span className="italic font-medium ml-2" style={{ fontFamily: 'Playfair Display', lineHeight: '1' }}>Privé</span>
           </Link>
@@ -57,10 +89,10 @@ const Navbar = () => {
             <Link to="/" className={linkClass}><Home size={18} /> Accueil</Link>
           )}
 
-          {user ? (
+          {user && (
             isAdmin ? (
               <>
-                <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition">
+                <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition cursor-pointer">
                   <LayoutDashboard size={18} /> Admin
                 </Link>
                 <Link to="/admin/orders" className={linkClass}><ClipboardList size={18} /> Commandes</Link>
@@ -72,23 +104,22 @@ const Navbar = () => {
                 <Link to="/order" className={linkClass}><History size={18} /> Historique</Link>
               </>
             )
-          ) : (
-            null
           )}
 
-          {/* Bouton Auth Desktop */}
           {user ? (
             <div className="flex items-center gap-4">
               <span className="italic font-medium text-sm text-black" style={{ fontFamily: 'Playfair Display' }}>
-                {/* Test de plusieurs profondeurs d'objet */}
                 {user.name || user.username || (user.user && user.user.name) || "Aura Client"}
               </span>
-              <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition">
+              <button 
+                onClick={() => setShowLogoutModal(true)} 
+                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition cursor-pointer"
+              >
                 <LogOut size={16} /> Déconnexion
               </button>
             </div>
           ) : (
-            <Link to="/auth" className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#f3e6d8] hover:bg-white text-black transition font-bold">
+            <Link to="/auth" className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#f3e6d8] hover:bg-white text-black transition font-bold cursor-pointer">
               <User size={16} /> Connexion
             </Link>
           )}
@@ -96,7 +127,7 @@ const Navbar = () => {
 
         {/* --- MOBILE BURGER BUTTON --- */}
         <div className="md:hidden flex items-center">
-          <button onClick={toggleMenu} className="text-black focus:outline-none">
+          <button onClick={toggleMenu} className="text-black focus:outline-none cursor-pointer">
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
@@ -112,39 +143,23 @@ const Navbar = () => {
             className="md:hidden bg-[#ada194] overflow-hidden border-t border-[#bcafa1]"
           >
             <div className="flex flex-col p-4 space-y-4 text-black font-medium">
-              {!isAdmin && (
-                <Link to="/" onClick={toggleMenu} className={linkClass}><Home size={18} /> Accueil</Link>
-              )}
+              {/* Liens mobiles avec cursor-pointer */}
+              {!isAdmin && <Link to="/" onClick={toggleMenu} className={linkClass}>Accueil</Link>}
               
               {user ? (
                 <>
-                  {isAdmin ? (
-                    <>
-                      <Link to="/admin" onClick={toggleMenu} className="font-bold text-[#3f1117] flex items-center gap-2"><LayoutDashboard size={18} /> Admin</Link>
-                      <Link to="/admin/orders" onClick={toggleMenu} className={linkClass}><ClipboardList size={18} /> Commandes</Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link to="/products" onClick={toggleMenu} className={linkClass}><Package size={18} /> Produits</Link>
-                      <Link to="/cart" onClick={toggleMenu} className={linkClass}><ShoppingCart size={18} /> Panier</Link>
-                      <Link to="/order" onClick={toggleMenu} className={linkClass}><History size={18} /> Historique</Link>
-                    </>
-                  )}
-                  <hr className="border-[#bcafa1]" />
-                  <div className="flex flex-col gap-3">
-                    <span className="italic">{user.name}</span>
-                    <button onClick={handleLogout} className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md">
-                      <LogOut size={18} /> Déconnexion
-                    </button>
-                  </div>
+                  <span className="italic px-2">{user.name || "Aura Client"}</span>
+                  <button 
+                    onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"
+                  >
+                    <LogOut size={18} /> Déconnexion
+                  </button>
                 </>
               ) : (
-                <>
-                  <Link to="/products" onClick={toggleMenu} className={linkClass}>Produits</Link>
-                  <Link to="/auth" onClick={toggleMenu} className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f3e6d8] text-black rounded-md font-bold">
-                    <User size={18} /> Connexion
-                  </Link>
-                </>
+                <Link to="/auth" onClick={toggleMenu} className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f3e6d8] text-black rounded-md font-bold cursor-pointer">
+                  Connexion
+                </Link>
               )}
             </div>
           </motion.div>
