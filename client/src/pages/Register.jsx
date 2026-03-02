@@ -12,7 +12,6 @@ function Register({ onSwitch }) {
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   
-  // Références pour le contrôle du focus
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const passRef = useRef(null);
@@ -21,32 +20,34 @@ function Register({ onSwitch }) {
 
   const navigate = useNavigate();
 
+  // 1. Empêcher les chiffres/spéciaux DIRECTEMENT à la frappe
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "name") {
+      const filteredValue = value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
+      setFormData({ ...formData, [name]: filteredValue });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
-  // --- FONCTION DE CONTRÔLE (MESSAGE BOX + FOCUS) ---
   const triggerError = (message, fieldRef) => {
     setError(message);
     setShowModal(true);
     lastActiveField.current = fieldRef;
   };
 
-    const validateField = (e) => {
+  const validateField = (e) => {
     const { name, value } = e.target;
     if (value === "") return;
 
     if (name === "name") {
-      // 1. Vérification de la longueur
       if (value.trim().length < 2) {
         return triggerError("Le nom est trop court (min 2 caractères).", nameRef);
       }
-      
-      // 2. Vérification "Lettres uniquement" (Regex)
-      // Autorise : Lettres majuscules/minuscules, Accents, Espaces, Trait d'union et Apostrophe
       const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
       if (!nameRegex.test(value)) {
-        return triggerError("Le nom ne doit contenir que des lettres (pas de chiffres ou symboles).", nameRef);
+        return triggerError("Le nom ne doit contenir que des lettres.", nameRef);
       }
     } 
     else if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -56,7 +57,6 @@ function Register({ onSwitch }) {
       triggerError("Le mot de passe doit faire au moins 6 caractères.", passRef);
     }
   };
-
 
   const closeModal = () => {
     setShowModal(false);
@@ -68,26 +68,37 @@ function Register({ onSwitch }) {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    
+    // Vérification finale avant envoi
     if (formData.password !== formData.confirmPassword) {
       return triggerError("Les mots de passe ne correspondent pas.", confirmRef);
     }
 
     try {
+      // 2. Envoi propre au serveur
       const res = await API.post("/auth/register", {
-        name: formData.name,
-        email: formData.email,
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(), // Important pour SQL
         password: formData.password
       });
-      navigate(res.data.user.role === "admin" ? "/admin" : "/");
+
+      // 3. Stockage automatique pour connecter l'utilisateur de suite
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      }
+
+      navigate(res.data.user?.role === "admin" ? "/admin" : "/");
     } catch (err) {
-      triggerError(err.response?.data?.message || "Erreur d'inscription", emailRef);
+      // Affiche le message réel du serveur (ex: "Email déjà pris")
+      const msg = err.response?.data?.message || "Erreur lors de l'insertion dans public.users";
+      triggerError(msg, emailRef);
     }
   };
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-white px-4 relative">
       
-      {/* --- MESSAGE BOX (MODALE) --- */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full border-t-4 border-red-600 text-black">
@@ -118,6 +129,7 @@ function Register({ onSwitch }) {
               ref={nameRef}
               name="name"
               type="text"
+              placeholder="Lettres uniquement"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-slate-900 transition"
               value={formData.name}
               onChange={handleChange}
@@ -132,6 +144,7 @@ function Register({ onSwitch }) {
               ref={emailRef}
               name="email"
               type="email"
+              placeholder="votre@email.com"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-slate-900 transition"
               value={formData.email}
               onChange={handleChange}
@@ -146,6 +159,7 @@ function Register({ onSwitch }) {
               ref={passRef}
               name="password"
               type="password"
+              placeholder="••••••••"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-slate-900 transition"
               value={formData.password}
               onChange={handleChange}
@@ -160,6 +174,7 @@ function Register({ onSwitch }) {
               ref={confirmRef}
               name="confirmPassword"
               type="password"
+              placeholder="••••••••"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-slate-900 transition"
               value={formData.confirmPassword}
               onChange={handleChange}
