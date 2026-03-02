@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -79,8 +79,9 @@ const Navbar = () => {
           {/* Bouton Auth Desktop */}
           {user ? (
             <div className="flex items-center gap-4">
-              <span className="italic font-medium text-sm" style={{ fontFamily: 'Playfair Display' }}>
-                {user.name || user.username || user.email || "Utilisateur"}
+              <span className="italic font-medium text-sm text-black" style={{ fontFamily: 'Playfair Display' }}>
+                {/* Test de plusieurs profondeurs d'objet */}
+                {user.name || user.username || (user.user && user.user.name) || "Aura Client"}
               </span>
               <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition">
                 <LogOut size={16} /> Déconnexion
