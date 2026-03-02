@@ -6,14 +6,13 @@ function Login({ onSwitch }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(""); 
-  const [showModal, setShowModal] = useState(false); // Contrôle de la Message Box
+  const [showModal, setShowModal] = useState(false);
   
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
-  const lastActiveField = useRef(null); // Pour savoir quel champ refocaliser
+  const lastActiveField = useRef(null);
   const navigate = useNavigate();
 
-  // Fonction pour afficher la box et bloquer
   const triggerError = (message, fieldRef) => {
     setError(message);
     setShowModal(true);
@@ -39,7 +38,6 @@ function Login({ onSwitch }) {
   const closeModal = () => {
     setShowModal(false);
     setError("");
-    // Redonne le focus au champ fautif dès la fermeture
     setTimeout(() => {
       lastActiveField.current?.current?.focus();
     }, 10);
@@ -63,12 +61,13 @@ function Login({ onSwitch }) {
       {/* --- MESSAGE BOX (MODALE) --- */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full border-t-4 border-red-600 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full border-t-4 border-red-600">
             <h3 className="text-xl font-bold text-red-600 mb-2">Erreur de saisie</h3>
             <p className="text-gray-700 mb-6 font-medium">{error}</p>
             <button
               onClick={closeModal}
-              className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold hover:bg-slate-800 transition"
+              // AJOUT : cursor-pointer
+              className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold hover:bg-slate-800 transition cursor-pointer"
             >
               Corriger le champ
             </button>
@@ -110,14 +109,23 @@ function Login({ onSwitch }) {
             />
           </div>
 
-          <button type="submit" className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800">
+          <button 
+            type="submit" 
+            // AJOUT : cursor-pointer
+            className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+          >
             Se connecter
           </button>
         </form>
 
         <p className="text-center text-black mt-8">
           Pas encore de compte ?{" "}
-          <button type="button" onClick={onSwitch} className="text-[#3f1117] font-bold hover:underline">
+          <button 
+            type="button" 
+            onClick={onSwitch} 
+            // AJOUT : cursor-pointer
+            className="text-[#3f1117] font-bold hover:underline cursor-pointer"
+          >
             Créer un compte
           </button>
         </p>
