@@ -19,22 +19,6 @@ function Login({ onSwitch }) {
     lastActiveField.current = fieldRef;
   };
 
-  const validateField = (e, type) => {
-    const value = e.target.value;
-    if (value === "") return;
-
-    if (type === "email") {
-      const isValidEmail = value.includes("@") && value.includes(".");
-      if (!isValidEmail) {
-        triggerError("Format email invalide (ex: nom@domaine.com)", emailRef);
-      }
-    } else if (type === "password") {
-      if (value.length < 4) {
-        triggerError("Le mot de passe est trop court (min 4)", passwordRef);
-      }
-    }
-  };
-
   const closeModal = () => {
     setShowModal(false);
     setError("");
@@ -66,8 +50,9 @@ function Login({ onSwitch }) {
             <p className="text-gray-700 mb-6 font-medium">{error}</p>
             <button
               onClick={closeModal}
-              // AJOUT : cursor-pointer
-              className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold hover:bg-slate-800 transition cursor-pointer"
+              // STYLE FORCÉ ICI
+              style={{ cursor: 'pointer' }}
+              className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold hover:bg-slate-800 transition"
             >
               Corriger le champ
             </button>
@@ -83,6 +68,7 @@ function Login({ onSwitch }) {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
+          {/* Champs Email et Password */}
           <div>
             <label className="block text-sm font-semibold text-black mb-2">Adresse Email</label>
             <input
@@ -91,7 +77,6 @@ function Login({ onSwitch }) {
               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onBlur={(e) => validateField(e, "email")}
               required
             />
           </div>
@@ -104,15 +89,15 @@ function Login({ onSwitch }) {
               className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onBlur={(e) => validateField(e, "password")}
               required
             />
           </div>
 
           <button 
             type="submit" 
-            // AJOUT : cursor-pointer
-            className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            // STYLE FORCÉ ICI
+            style={{ cursor: 'pointer' }}
+            className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition"
           >
             Se connecter
           </button>
@@ -123,8 +108,9 @@ function Login({ onSwitch }) {
           <button 
             type="button" 
             onClick={onSwitch} 
-            // AJOUT : cursor-pointer
-            className="text-[#3f1117] font-bold hover:underline cursor-pointer"
+            // STYLE FORCÉ ICI
+            style={{ cursor: 'pointer' }}
+            className="text-[#3f1117] font-bold hover:underline"
           >
             Créer un compte
           </button>
