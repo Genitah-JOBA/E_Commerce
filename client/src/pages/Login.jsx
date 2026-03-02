@@ -5,46 +5,53 @@ import { useNavigate } from "react-router-dom";
 function Login({ onSwitch }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(""); // On initialise avec une chaîne vide
   
-  // 1. Création de références pour cibler les inputs
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
-  
   const navigate = useNavigate();
 
-  // 2. Fonction de contrôle à la sortie du champ
   const validateField = (e, type) => {
     const value = e.target.value;
-    let isValid = true;
-
-    if (type === "email") {
-      // Vérification simple du format email
-      isValid = value.includes("@") && value.includes(".");
-    } else if (type === "password") {
-      // Exemple : minimum 4 caractères
-      isValid = value.length >= 4;
+    
+    // Si le champ est vide, on ne bloque pas (optionnel)
+    if (value === "") {
+      setError("");
+      return;
     }
 
-    if (!isValid && value !== "") {
-      setError(`Format ${type} invalide`);
-      // 3. Force le focus à revenir dans le champ
-      setTimeout(() => e.target.focus(), 0); 
+    let errorMessage = "";
+    if (type === "email") {
+      const isValidEmail = value.includes("@") && value.includes(".");
+      if (!isValidEmail) errorMessage = "Format email invalide (ex: nom@domaine.com)";
+    } else if (type === "password") {
+      if (value.length < 4) errorMessage = "Le mot de passe doit faire au moins 4 caractères";
+    }
+
+    if (errorMessage) {
+      setError(errorMessage);
+      // On utilise un timeout pour forcer le focus APRES le rendu de l'erreur
+      setTimeout(() => {
+        e.target.focus();
+      }, 10);
     } else {
-      setError(null);
+      setError(""); // On vide l'erreur si tout est bon
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError(""); // Reset avant tentative
+
     try {
       const res = await API.post("/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/admin");
     } catch (err) {
+      // Si l'API renvoie une erreur (ex: 401), on affiche l'erreur et on bloque sur l'email
       setError("Email ou mot de passe incorrect");
-      emailRef.current.focus(); // Retour au début en cas d'erreur API
+      setTimeout(() => emailRef.current?.focus(), 10);
     }
   };
 
@@ -58,20 +65,21 @@ function Login({ onSwitch }) {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {/* Message d'erreur global si besoin */}
+          {/* Message d'erreur : affichage SI error n'est pas vide */}
           {error && (
-            <div className="text-red-700 bg-red-100 p-3 rounded-lg text-sm font-bold text-center">
+            <div className="bg-red-100 border-l-4 border-red-600 text-red-700 p-3 rounded shadow-sm text-sm font-bold animate-pulse">
               {error}
             </div>
           )}
 
-          {/* Champ Email */}
           <div>
             <label className="block text-sm font-semibold text-black mb-2">Adresse Email</label>
             <input
+              ref={emailRef}
               type="email"
-              className={`w-full px-4 py-3 rounded-lg border outline-none transition duration-200 
-                ${error ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+              placeholder="votre@email.com"
+              className={`w-full px-4 py-3 rounded-lg border outline-none transition-all
+                ${error && error.includes("email") ? 'border-red-600 ring-2 ring-red-100' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={(e) => validateField(e, "email")}
@@ -79,13 +87,14 @@ function Login({ onSwitch }) {
             />
           </div>
 
-          {/* Champ Mot de passe */}
           <div>
             <label className="block text-sm font-semibold text-black mb-2">Mot de passe</label>
             <input
+              ref={passwordRef}
               type="password"
-              className={`w-full px-4 py-3 rounded-lg border outline-none transition duration-200 
-                ${error ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+              placeholder="••••••••"
+              className={`w-full px-4 py-3 rounded-lg border outline-none transition-all
+                ${error && error.includes("passe") ? 'border-red-600 ring-2 ring-red-100' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onBlur={(e) => validateField(e, "password")}
@@ -93,10 +102,7 @@ function Login({ onSwitch }) {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 shadow-md"
-          >
+          <button type="submit" className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 shadow-md">
             Se connecter
           </button>
         </form>
