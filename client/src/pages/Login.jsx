@@ -5,58 +5,77 @@ import { useNavigate } from "react-router-dom";
 function Login({ onSwitch }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // On initialise avec une chaîne vide
+  const [error, setError] = useState(""); 
+  const [showModal, setShowModal] = useState(false); // Contrôle de la Message Box
   
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const lastActiveField = useRef(null); // Pour savoir quel champ refocaliser
   const navigate = useNavigate();
+
+  // Fonction pour afficher la box et bloquer
+  const triggerError = (message, fieldRef) => {
+    setError(message);
+    setShowModal(true);
+    lastActiveField.current = fieldRef;
+  };
 
   const validateField = (e, type) => {
     const value = e.target.value;
-    
-    // Si le champ est vide, on ne bloque pas (optionnel)
-    if (value === "") {
-      setError("");
-      return;
-    }
+    if (value === "") return;
 
-    let errorMessage = "";
     if (type === "email") {
       const isValidEmail = value.includes("@") && value.includes(".");
-      if (!isValidEmail) errorMessage = "Format email invalide (ex: nom@domaine.com)";
+      if (!isValidEmail) {
+        triggerError("Format email invalide (ex: nom@domaine.com)", emailRef);
+      }
     } else if (type === "password") {
-      if (value.length < 4) errorMessage = "Le mot de passe doit faire au moins 4 caractères";
+      if (value.length < 4) {
+        triggerError("Le mot de passe est trop court (min 4)", passwordRef);
+      }
     }
+  };
 
-    if (errorMessage) {
-      setError(errorMessage);
-      // On utilise un timeout pour forcer le focus APRES le rendu de l'erreur
-      setTimeout(() => {
-        e.target.focus();
-      }, 10);
-    } else {
-      setError(""); // On vide l'erreur si tout est bon
-    }
+  const closeModal = () => {
+    setShowModal(false);
+    setError("");
+    // Redonne le focus au champ fautif dès la fermeture
+    setTimeout(() => {
+      lastActiveField.current?.current?.focus();
+    }, 10);
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Reset avant tentative
-
     try {
       const res = await API.post("/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/admin");
     } catch (err) {
-      // Si l'API renvoie une erreur (ex: 401), on affiche l'erreur et on bloque sur l'email
-      setError("Email ou mot de passe incorrect");
-      setTimeout(() => emailRef.current?.focus(), 10);
+      triggerError("Email ou mot de passe incorrect", emailRef);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-white px-4">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-white px-4 relative">
+      
+      {/* --- MESSAGE BOX (MODALE) --- */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full border-t-4 border-red-600 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-xl font-bold text-red-600 mb-2">Erreur de saisie</h3>
+            <p className="text-gray-700 mb-6 font-medium">{error}</p>
+            <button
+              onClick={closeModal}
+              className="w-full bg-slate-900 text-white py-2 rounded-lg font-bold hover:bg-slate-800 transition"
+            >
+              Corriger le champ
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-md w-full bg-[#ada194] rounded-xl shadow-lg p-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-extrabold text-slate-900" style={{ fontFamily: 'adorable' }}>
@@ -65,21 +84,12 @@ function Login({ onSwitch }) {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {/* Message d'erreur : affichage SI error n'est pas vide */}
-          {error && (
-            <div className="bg-red-100 border-l-4 border-red-600 text-red-700 p-3 rounded shadow-sm text-sm font-bold animate-pulse">
-              {error}
-            </div>
-          )}
-
           <div>
             <label className="block text-sm font-semibold text-black mb-2">Adresse Email</label>
             <input
               ref={emailRef}
               type="email"
-              placeholder="votre@email.com"
-              className={`w-full px-4 py-3 rounded-lg border outline-none transition-all
-                ${error && error.includes("email") ? 'border-red-600 ring-2 ring-red-100' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onBlur={(e) => validateField(e, "email")}
@@ -92,9 +102,7 @@ function Login({ onSwitch }) {
             <input
               ref={passwordRef}
               type="password"
-              placeholder="••••••••"
-              className={`w-full px-4 py-3 rounded-lg border outline-none transition-all
-                ${error && error.includes("passe") ? 'border-red-600 ring-2 ring-red-100' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onBlur={(e) => validateField(e, "password")}
@@ -102,7 +110,7 @@ function Login({ onSwitch }) {
             />
           </div>
 
-          <button type="submit" className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 shadow-md">
+          <button type="submit" className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800">
             Se connecter
           </button>
         </form>
