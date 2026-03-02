@@ -8,10 +8,19 @@ import {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null); // Ajout d'un state
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const isAdmin = currentUser && currentUser.role === "admin";
   
   const user = JSON.parse(localStorage.getItem("user"));
-  const isAdmin = user && user.role === "admin";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -70,7 +79,9 @@ const Navbar = () => {
           {/* Bouton Auth Desktop */}
           {user ? (
             <div className="flex items-center gap-4">
-              <span className="italic font-medium text-sm" style={{ fontFamily: 'Playfair Display' }}>{user.name}</span>
+              <span className="italic font-medium text-sm" style={{ fontFamily: 'Playfair Display' }}>
+                {user.name || user.username || user.email || "Utilisateur"}
+              </span>
               <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition">
                 <LogOut size={16} /> Déconnexion
               </button>
