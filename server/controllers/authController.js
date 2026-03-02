@@ -20,8 +20,8 @@ export const register = async (req, res) => {
     // 3. Insertion (On force le schéma public)
     // IMPORTANT: Vérifie que ta table a bien les colonnes 'name' et 'role'
     const result = await pool.query(
-      "INSERT INTO public.users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, email, hashedPassword, 'user'] // 'name' du frontend va dans 'username' du SQL
+      "INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, email, hashedPassword, 'user'] 
     );
 
     const newUser = result.rows[0];
