@@ -7,8 +7,9 @@ export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Vérifier si l'utilisateur existe déjà (Optionnel mais recommandé)
-    const userExist = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    // 1. Vérification si l'utilisateur existe (Hautement recommandé)
+    // On précise "public.users" pour être certain de la table
+    const userExist = await pool.query("SELECT * FROM public.users WHERE email = $1", [email]);
     if (userExist.rows.length > 0) {
       return res.status(400).json({ message: "Cet email est déjà utilisé" });
     }
@@ -16,31 +17,37 @@ export const register = async (req, res) => {
     // 2. Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Insérer l'utilisateur (on ajoute 'role' avec une valeur par défaut 'user' si besoin)
+    // 3. Insertion (On force le schéma public)
+    // IMPORTANT: Vérifie que ta table a bien les colonnes 'name' et 'role'
     const result = await pool.query(
-      "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *",
-      [name, email, hashedPassword, 'user'] // 'user' par défaut
+      "INSERT INTO public.users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role",
+      [name, email, hashedPassword, 'user']
     );
 
     const newUser = result.rows[0];
-    delete newUser.password; // Sécurité
 
-    // 4. Générer le token pour connecter l'utilisateur immédiatement
+    // 4. Générer le token
+    // On s'assure que JWT_SECRET est bien chargé
     const token = jwt.sign(
       { id: newUser.id, name: newUser.name, role: newUser.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback_secret_key', 
       { expiresIn: '24h' }
     );
 
-    // 5. Envoyer la réponse
     res.status(201).json({
       message: "Utilisateur créé avec succès",
-      token, // On envoie le token ici aussi !
+      token,
       user: newUser,
     });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Erreur lors de l'inscription au serveur" });
+    // CE LOG EST ESSENTIEL : Il te dira si une colonne manque dans SQL
+    console.error("ERREUR REGISTRE SQL:", error.message);
+    
+    // On renvoie le message d'erreur précis au frontend pour le debug
+    res.status(500).json({ 
+      message: "Erreur serveur : " + error.message 
+    });
   }
 };
 
