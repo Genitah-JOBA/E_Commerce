@@ -32,12 +32,22 @@ function Register({ onSwitch }) {
     lastActiveField.current = fieldRef;
   };
 
-  const validateField = (e) => {
+    const validateField = (e) => {
     const { name, value } = e.target;
     if (value === "") return;
 
-    if (name === "name" && value.trim().length < 2) {
-      triggerError("Le nom est trop court (min 2 caractères).", nameRef);
+    if (name === "name") {
+      // 1. Vérification de la longueur
+      if (value.trim().length < 2) {
+        return triggerError("Le nom est trop court (min 2 caractères).", nameRef);
+      }
+      
+      // 2. Vérification "Lettres uniquement" (Regex)
+      // Autorise : Lettres majuscules/minuscules, Accents, Espaces, Trait d'union et Apostrophe
+      const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
+      if (!nameRegex.test(value)) {
+        return triggerError("Le nom ne doit contenir que des lettres (pas de chiffres ou symboles).", nameRef);
+      }
     } 
     else if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       triggerError("Format d'email invalide.", emailRef);
@@ -46,6 +56,7 @@ function Register({ onSwitch }) {
       triggerError("Le mot de passe doit faire au moins 6 caractères.", passRef);
     }
   };
+
 
   const closeModal = () => {
     setShowModal(false);
