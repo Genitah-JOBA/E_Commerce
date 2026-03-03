@@ -20,12 +20,12 @@ const Navbar = () => {
   }, []);
 
   const isAdmin = currentUser && currentUser.role === "admin";
-  const user = currentUser; // Utilisation du state pour la réactivité
 
   const confirmLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setIsOpen(false);
+    setCurrentUser(null);
     setShowLogoutModal(false);
     navigate("/auth");
   };
@@ -89,7 +89,7 @@ const Navbar = () => {
             <Link to="/" className={linkClass}><Home size={18} /> Accueil</Link>
           )}
 
-          {user && (
+          {currentUser && (
             isAdmin ? (
               <>
                 <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition cursor-pointer">
@@ -106,20 +106,17 @@ const Navbar = () => {
             )
           )}
 
-          {user ? (
+          {currentUser ? (
             <div className="flex items-center gap-4">
-              <span className="italic font-medium text-sm text-black" style={{ fontFamily: 'Playfair Display' }}>
-                {user.name || user.username || (user.user && user.user.name) || "Aura Client"}
+              <span className="italic font-medium text-sm text-black">
+                {currentUser.username || currentUser.name || "Aura Client"}
               </span>
-              <button 
-                onClick={() => setShowLogoutModal(true)} 
-                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition cursor-pointer"
-              >
+              <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md cursor-pointer">
                 <LogOut size={16} /> Déconnexion
               </button>
             </div>
           ) : (
-            <Link to="/auth" className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#f3e6d8] hover:bg-white text-black transition font-bold cursor-pointer">
+            <Link to="/auth" className="flex items-center gap-2 px-4 py-2 rounded-md bg-[#f3e6d8] text-black font-bold cursor-pointer">
               <User size={16} /> Connexion
             </Link>
           )}
