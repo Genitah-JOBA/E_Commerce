@@ -74,60 +74,74 @@ function AdminOrders() {
   };
 
   const viewDetails = async (order) => {
-    try {
-      const res = await API.get(`/orders/${order.id}/items`);
+  try {
+    const res = await API.get(`/orders/${order.id}/items`);
 
-      const delivery = order.delivery || {};
-      
-      // Build HTML Table for the Items
-      let itemsHTML = `
-        <table style="width:100%; border-collapse: collapse; margin-top: 15px; font-family: sans-serif; text-align: left;">
-          <thead>
-            <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 11px; text-transform: uppercase;">
-              <th style="padding:10px;">Produit</th>
-              <th style="padding:10px; text-align:center;">Qté</th>
-              <th style="padding:10px; text-align:right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
+    // Préparation de la date lisible
+    const orderDate = order.created_at 
+      ? new Date(order.created_at).toLocaleString('fr-FR', { 
+          dateStyle: 'short', 
+          timeStyle: 'short' 
+        }) 
+      : "Non précisée";
 
-      res.data.forEach((item) => {
-        itemsHTML += `
-          <tr style="border-bottom: 1px solid #f8fafc; font-size: 13px;">
-            <td style="padding:10px; font-weight: 600; color: #1e293b;">${item.name}</td>
-            <td style="padding:10px; text-align:center; color: #64748b;">x${item.quantity}</td>
-            <td style="padding:10px; text-align:right; font-weight: 700;">${Number(item.price * item.quantity).toLocaleString()} Ar</td>
+    // Construction du tableau des articles
+    let itemsHTML = `
+      <table style="width:100%; border-collapse: collapse; margin-top: 15px; font-family: sans-serif; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 11px; text-transform: uppercase;">
+            <th style="padding:10px;">Produit</th>
+            <th style="padding:10px; text-align:center;">Qté</th>
+            <th style="padding:10px; text-align:right;">Total</th>
           </tr>
-        `;
-      });
+        </thead>
+        <tbody>
+    `;
 
-      itemsHTML += `</tbody></table>`;
+    res.data.forEach((item) => {
+      itemsHTML += `
+        <tr style="border-bottom: 1px solid #f8fafc; font-size: 13px;">
+          <td style="padding:10px; font-weight: 600; color: #1e293b;">${item.name}</td>
+          <td style="padding:10px; text-align:center; color: #64748b;">x${item.quantity}</td>
+          <td style="padding:10px; text-align:right; font-weight: 700;">${Number(item.price * item.quantity).toLocaleString()} Ar</td>
+        </tr>
+      `;
+    });
+    itemsHTML += `</tbody></table>`;
 
-      // Show SweetAlert Modal
-      Swal.fire({
-        title: `Détails Commande #${order.id}`,
-        width: 550,
-        confirmButtonColor: "#0f172a",
-        confirmButtonText: "Fermer",
-        html: `
-          <div style="text-align:left; font-family: sans-serif;">
-            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
-              <p style="margin: 0; font-size: 14px; color: #64748b;"><strong>Client :</strong> ${order.name}</p>
-              <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Contact :</strong> ${order.email}</p>
-              <p style="margin: 8px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800;">
-                TOTAL : ${Number(order.total).toLocaleString()} Ar
-              </p>
-            </div>
-            ${itemsHTML}
+    // Affichage de la modale avec les nouveaux champs
+    Swal.fire({
+      title: `Détails Commande #${order.id}`,
+      width: 550,
+      confirmButtonColor: "#0f172a",
+      confirmButtonText: "Fermer",
+      html: `
+        <div style="text-align:left; font-family: sans-serif;">
+          <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
+            <p style="margin: 0; font-size: 14px; color: #1e293b;"><strong>Client :</strong> ${order.name}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Email :</strong> ${order.email}</p>
+            
+            <!-- AJOUT DU TÉLÉPHONE ET DE L'ADRESSE -->
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
+            
+            <!-- AJOUT DE LA DATE ET HEURE -->
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Date :</strong> ${orderDate}</p>
+
+            <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; pt-2">
+              TOTAL : ${Number(order.total).toLocaleString()} Ar
+            </p>
           </div>
-        `
-      });
-    } catch (error) {
-      console.error(error);
-      Swal.fire("Erreur", "Impossible de récupérer les articles.", "error");
-    }
-  };
+          ${itemsHTML}
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error(error);
+    Swal.fire("Erreur", "Impossible de récupérer les détails.", "error");
+  }
+};
+
 
   const getStatusIcon = (status) => {
     switch (status) {
