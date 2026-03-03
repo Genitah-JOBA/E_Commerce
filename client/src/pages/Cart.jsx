@@ -72,68 +72,6 @@ function Cart() {
     0
   );
 
-  const handleOrder = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      Swal.fire({
-        icon: "error",
-        title: "Connexion requise",
-        text: "Veuillez vous connecter pour passer commande.",
-        confirmButtonColor: "#ada194"
-      });
-      return;
-    }
-
-    if (cart.length === 0) {
-      Swal.fire({ icon: "info", title: "Panier vide" });
-      return;
-    }
-
-    // Confirmation MessageBox before placing order
-    const result = await Swal.fire({
-      title: "Confirmer la commande",
-      text: `Montant total : ${total.toLocaleString()} Ar. Souhaitez-vous valider ?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#0f172a",
-      cancelButtonColor: "#ada194",
-      confirmButtonText: "Valider la commande",
-      cancelButtonText: "Vérifier encore"
-    });
-
-    if (result.isConfirmed) {
-      const orderItems = cart.map(item => ({
-        product_id: item.id,
-        quantity: item.quantity
-      }));
-
-      try {
-        await API.post(
-          "/orders",
-          { items: orderItems },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        Swal.fire({
-          icon: "success",
-          title: "Commande validée !",
-          text: "Merci pour votre confiance. Nous traitons votre commande.",
-          confirmButtonColor: "#ada194"
-        });
-
-        localStorage.removeItem("cart");
-        setCart([]);
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Erreur",
-          text: error.response?.data?.error || "Une erreur est survenue lors de la commande."
-        });
-      }
-    }
-  };
-
   const handleCheckout = () => {
     Swal.fire({
       title: 'Détails de la livraison 🚚',
@@ -199,13 +137,107 @@ function Cart() {
   };
 
   const sendOrderToDatabase = async (deliveryData) => {
+    const token = localStorage.getItem("token");
+    const orderItems = cart.map(item => ({
+      product_id: item.id,
+      quantity: item.quantity
+    }));
+
+    try {
+      await API.post(
+        "/orders",
+        { 
+          items: orderItems,
+          delivery: deliveryData // On envoie les infos de livraison au backend
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Commande enregistrée !',
+        text: 'Votre colis Aura Privé arrive bientôt.',
+        confirmButtonColor: '#0f172a'
+      });
+
+      localStorage.removeItem("cart");
+      setCart([]);
+    } catch (err) {
+      Swal.fire('Erreur', err.response?.data?.message || 'Erreur lors de la commande', 'error');
+    }
+  };
+
+const sendOrderToDatabase = async (deliveryData) => {
+    try {
+        // Logique d'envoi à votre backend /api/orders
+        Swal.fire('Succès !', 'Votre commande a été enregistrée.', 'success');
+    } catch (err) {
+        Swal.fire('Erreur', 'Impossible de valider la commande.', 'error');
+    }
+}
+
+
+  const handleOrder = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      Swal.fire({
+        icon: "error",
+        title: "Connexion requise",
+        text: "Veuillez vous connecter pour passer commande.",
+        confirmButtonColor: "#ada194"
+      });
+      return;
+    }
+
+    if (cart.length === 0) {
+      Swal.fire({ icon: "info", title: "Panier vide" });
+      return;
+    }
+
+    // Confirmation MessageBox before placing order
+    const result = await Swal.fire({
+      title: "Confirmer la commande",
+      text: `Montant total : ${total.toLocaleString()} Ar. Souhaitez-vous valider ?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0f172a",
+      cancelButtonColor: "#ada194",
+      confirmButtonText: "Valider la commande",
+      cancelButtonText: "Vérifier encore"
+    });
+
+    if (result.isConfirmed) {
+      const orderItems = cart.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity
+      }));
+
       try {
-          // Logique d'envoi à votre backend /api/orders
-          Swal.fire('Succès !', 'Votre commande a été enregistrée.', 'success');
-      } catch (err) {
-          Swal.fire('Erreur', 'Impossible de valider la commande.', 'error');
+        await API.post(
+          "/orders",
+          { items: orderItems },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Commande validée !",
+          text: "Merci pour votre confiance. Nous traitons votre commande.",
+          confirmButtonColor: "#ada194"
+        });
+
+        localStorage.removeItem("cart");
+        setCart([]);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Erreur",
+          text: error.response?.data?.error || "Une erreur est survenue lors de la commande."
+        });
       }
-  }
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen p-6 md:p-12">
@@ -273,7 +305,7 @@ function Cart() {
               </div>
               
               <button
-                onClick={handleCheckout} 
+                onClick={handleCheckout}
                 className="mt-6 md:mt-0 w-full md:w-auto bg-[#ada194] hover:bg-white hover:text-[#ada194] text-white px-10 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 shadow-lg active:scale-95"
               >
                 <CreditCard size={20} /> PASSER COMMANDE
