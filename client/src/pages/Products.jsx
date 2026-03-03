@@ -111,6 +111,7 @@ function Products() {
                 </span>
               </div>
               <div className="text-xl font-black text-slate-900 mb-4 px-1">{Number(product.price).toLocaleString()} Ar</div>
+              <div className="text-xl font-black text-slate-900 mb-4 px-1">{Number(product.description).toLocaleString()} Ar</div>
               
               <button 
                 onClick={() => addToCart(product)} 
