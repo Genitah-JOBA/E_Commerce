@@ -111,7 +111,7 @@ function Products() {
                 </span>
               </div>
               <div className="text-xl font-black text-slate-900 mb-4 px-1">{Number(product.price).toLocaleString()} Ar</div>
-              <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+              <p className="text-black text-sm line-clamp-2">
                 {product.description || "Aucune description disponible pour cette pièce signature."}
               </p>
               <button 
