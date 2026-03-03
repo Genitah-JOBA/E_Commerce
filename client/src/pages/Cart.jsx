@@ -70,6 +70,8 @@ function Cart() {
     0
   );
 
+  
+
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -191,18 +193,41 @@ function Cart() {
   };
 
   const sendOrderToDatabase = async (deliveryData) => {
-    const token = localStorage.getItem("token");
-    const orderItems = cart.map(item => ({ product_id: item.id, quantity: item.quantity }));
+  const token = localStorage.getItem("token");
+  
+  // Préparation des articles
+  const orderItems = cart.map(item => ({ 
+    product_id: item.id, 
+    quantity: item.quantity 
+  }));
 
-    try {
-      await API.post("/orders", { items: orderItems, delivery: deliveryData }, { headers: { Authorization: `Bearer ${token}` } });
-      Swal.fire({ icon: 'success', title: 'Commande validée !', text: 'Merci pour votre confiance.', confirmButtonColor: '#0f172a' });
-      localStorage.removeItem("cart");
-      setCart([]);
-    } catch (err) {
-      Swal.fire('Erreur', err.response?.data?.message || 'Erreur lors de la commande', 'error');
-    }
-  };
+  try {
+    // ON ENVOIE LES DONNÉES À PLAT (SANS L'OBJET "delivery")
+    await API.post("/orders", { 
+      items: orderItems, 
+      name: deliveryData.name,
+      phone: deliveryData.phone,
+      email: deliveryData.email,
+      address: deliveryData.address,
+      delivery_date: deliveryData.date, // Assure-toi que ton backend attend ce nom
+      delivery_time: deliveryData.time  // Assure-toi que ton backend attend ce nom
+    }, { 
+      headers: { Authorization: `Bearer ${token}` } 
+    });
+
+    Swal.fire({ 
+      icon: 'success', 
+      title: 'Commande validée !', 
+      text: 'Merci pour votre confiance.', 
+      confirmButtonColor: '#0f172a' 
+    });
+
+    localStorage.removeItem("cart");
+    setCart([]);
+  } catch (err) {
+    Swal.fire('Erreur', err.response?.data?.message || 'Erreur lors de la commande', 'error');
+  }
+};
 
   return (
     <div className="bg-white min-h-screen p-6 md:p-12">

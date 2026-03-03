@@ -76,15 +76,16 @@ function AdminOrders() {
   const viewDetails = async (order) => {
   try {
     const res = await API.get(`/orders/${order.id}/items`);
-    
-    // 1. ON RÉCUPÈRE L'OBJET DELIVERY (ou un objet vide par sécurité)
-    const delivery = order.delivery || {};
 
-    // 2. ON FORMATE LA DATE ET L'HEURE DE LIVRAISON CHOISIE PAR LE CLIENT
-    // On utilise les champs 'date' et 'time' envoyés par le Cart.jsx
-    const deliveryDate = delivery.date ? new Date(delivery.date).toLocaleDateString('fr-FR') : "Non précisée";
-    const deliveryTime = delivery.time || "Non précisée";
+    // Préparation de la date lisible
+    const orderDate = order.created_at 
+      ? new Date(order.created_at).toLocaleString('fr-FR', { 
+          dateStyle: 'short', 
+          timeStyle: 'short' 
+        }) 
+      : "Non précisée";
 
+    // Construction du tableau des articles
     let itemsHTML = `
       <table style="width:100%; border-collapse: collapse; margin-top: 15px; font-family: sans-serif; text-align: left;">
         <thead>
@@ -108,6 +109,7 @@ function AdminOrders() {
     });
     itemsHTML += `</tbody></table>`;
 
+    // Affichage de la modale avec les nouveaux champs
     Swal.fire({
       title: `Détails Commande #${order.id}`,
       width: 550,
@@ -116,15 +118,12 @@ function AdminOrders() {
       html: `
         <div style="text-align:left; font-family: sans-serif;">
           <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
-            <p style="margin: 0; font-size: 14px; color: #1e293b;"><strong>Client :</strong> ${delivery.name || order.name}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Email :</strong> ${delivery.email || order.email}</p>
-            
-            <!-- ON LIT DANS L'OBJET DELIVERY -->
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Téléphone :</strong> ${delivery.phone || 'Non renseigné'}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Lieu de livraison :</strong> ${delivery.address || 'Non renseignée'}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Date de livraison :</strong> ${deliveryDate} à ${deliveryTime}</p>
-
-            <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+            <p style="margin: 0; font-size: 14px; color: #1e293b;"><strong>Client :</strong> ${order.name}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Email :</strong> ${order.email}</p>
+            <p><strong>Téléphone :</strong> ${order.phone}</p>
+            <p><strong>Adresse :</strong> ${order.address}</p>
+            <p><strong>Livraison le :</strong> ${order.delivery_date} à ${order.delivery_time}</p>
+            <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; pt-2">
               TOTAL : ${Number(order.total).toLocaleString()} Ar
             </p>
           </div>
