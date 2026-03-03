@@ -128,7 +128,7 @@ export const getAllOrders = async (req, res) => {
     let query = `
       SELECT 
         orders.id,
-        users.name,
+        users.username AS name,
         users.email,
         orders.total,
         orders.status,
