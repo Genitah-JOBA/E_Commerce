@@ -61,61 +61,61 @@ function AdminDashboard() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  // 1. Validations de base
-  if (!form.image) {
-    return Swal.fire({ icon: 'warning', title: 'Image manquante', text: 'Veuillez choisir une image.', confirmButtonColor: '#ada194' });
-  }
-
-  // 2. Recherche d'un doublon exact (Nom + Description + Image)
-  const existingProduct = products.find(p => 
-    p.name.toLowerCase() === form.name.toLowerCase() && 
-    p.description === form.description && 
-    p.image === form.image
-  );
-
-  try {
-    if (existingProduct) {
-      // --- LOGIQUE DE MISE À JOUR (FUSION) ---
-      const updatedStock = Number(existingProduct.stock) + Number(form.stock);
-      
-      await API.put(`/products/${existingProduct.id}`, {
-        ...existingProduct,
-        stock: updatedStock,
-        price: form.price // On prend le prix de la dernière version
-      });
-
-      Swal.fire({ 
-        icon: 'info', 
-        title: 'Produit mis à jour', 
-        text: `Le stock de ${form.name} a été augmenté (+${form.stock}). Nouveau total : ${updatedStock}`,
-        confirmButtonColor: '#ada194'
-      });
-
-    } else {
-      // --- LOGIQUE DE CRÉATION CLASSIQUE ---
-      await API.post("/products", form);
-      
-      Swal.fire({ 
-        icon: 'success', 
-        title: 'Produit ajouté !', 
-        text: `${form.name} est maintenant dans le catalogue.`,
-        timer: 2000, 
-        showConfirmButton: false,
-        iconColor: '#ada194'
-      });
+    e.preventDefault();
+    
+    // 1. Validations de base
+    if (!form.image) {
+      return Swal.fire({ icon: 'warning', title: 'Image manquante', text: 'Veuillez choisir une image.', confirmButtonColor: '#ada194' });
     }
 
-    // Réinitialisation et rafraîchissement
-    fetchProducts();
-    setForm({ name: "", description: "", price: "", stock: "", image: "" });
+    // 2. Recherche d'un doublon exact (Nom + Description + Image)
+    const existingProduct = products.find(p => 
+      p.name.toLowerCase() === form.name.toLowerCase() && 
+      p.description === form.description && 
+      p.image === form.image
+    );
 
-  } catch (err) { 
-    console.error(err);
-    Swal.fire('Erreur serveur', "Impossible d'enregistrer les modifications.", 'error'); 
-  }
-};
+    try {
+      if (existingProduct) {
+        // --- LOGIQUE DE MISE À JOUR (FUSION) ---
+        const updatedStock = Number(existingProduct.stock) + Number(form.stock);
+        
+        await API.put(`/products/${existingProduct.id}`, {
+          ...existingProduct,
+          stock: updatedStock,
+          price: form.price // On prend le prix de la dernière version
+        });
+
+        Swal.fire({ 
+          icon: 'info', 
+          title: 'Produit mis à jour', 
+          text: `Le stock de ${form.name} a été augmenté (+${form.stock}). Nouveau total : ${updatedStock}`,
+          confirmButtonColor: '#ada194'
+        });
+
+      } else {
+        // --- LOGIQUE DE CRÉATION CLASSIQUE ---
+        await API.post("/products", form);
+        
+        Swal.fire({ 
+          icon: 'success', 
+          title: 'Produit ajouté !', 
+          text: `${form.name} est maintenant dans le catalogue.`,
+          timer: 2000, 
+          showConfirmButton: false,
+          iconColor: '#ada194'
+        });
+      }
+
+      // Réinitialisation et rafraîchissement
+      fetchProducts();
+      setForm({ name: "", description: "", price: "", stock: "", image: "" });
+
+    } catch (err) { 
+      console.error(err);
+      Swal.fire('Erreur serveur', "Impossible d'enregistrer les modifications.", 'error'); 
+    }
+  };
 
   const handleDelete = async (id) => {
     // MessageBox de confirmation
@@ -252,7 +252,7 @@ function AdminDashboard() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => handleDelete(product._id)}
+                    onClick={() => handleDelete(product.id)}
                     className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
                   >
                     <Trash2 size={18} />
