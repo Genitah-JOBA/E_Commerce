@@ -118,6 +118,7 @@ function AdminDashboard() {
   };
 
   const handleDelete = async (id) => {
+    console.log("Tentative de suppression de l'ID :", id);
     // MessageBox de confirmation
     const result = await Swal.fire({
       title: 'Supprimer ce produit ?',
@@ -252,7 +253,7 @@ function AdminDashboard() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => handleDelete(product._id || product.id)}
                     className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
                   >
                     <Trash2 size={18} />
