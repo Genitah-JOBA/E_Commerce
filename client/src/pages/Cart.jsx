@@ -77,6 +77,8 @@ function Cart() {
     return;
   }
 
+  const today = new Date().toISOString().split('T')[0];
+
   Swal.fire({
     title: 'Détails de la livraison 🚚',
     html: `
@@ -123,6 +125,21 @@ function Cart() {
         e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
         e.target.setSelectionRange(start, start);
       });
+
+      if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
+        Swal.showValidationMessage(`Tous les champs sont obligatoires`);
+        return false;
+      }
+
+      // --- CONTRÔLE DATE PASSÉE (SÉCURITÉ) ---
+      const selectedDate = new Date(data.date);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate < currentDate) {
+        Swal.showValidationMessage(`La date de livraison ne peut pas être dans le passé`);
+        return false;
+      }
 
       // 2. BLOCAGE TÉLÉPHONE : Supprime tout ce qui n'est pas un chiffre
       phoneInp.addEventListener('input', (e) => {
@@ -176,7 +193,6 @@ function Cart() {
     if (result.isConfirmed) sendOrderToDatabase(result.value);
   });
 };
-
 
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
