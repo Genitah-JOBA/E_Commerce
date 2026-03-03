@@ -167,16 +167,6 @@ function Cart() {
     }
   };
 
-const sendOrderToDatabase = async (deliveryData) => {
-    try {
-        // Logique d'envoi à votre backend /api/orders
-        Swal.fire('Succès !', 'Votre commande a été enregistrée.', 'success');
-    } catch (err) {
-        Swal.fire('Erreur', 'Impossible de valider la commande.', 'error');
-    }
-}
-
-
   const handleOrder = async () => {
     const token = localStorage.getItem("token");
 
