@@ -4,7 +4,6 @@ import pool from "../config/db.js";
 export const createOrder = async (req, res) => {
   const client = await pool.connect();
   try {
-    // 1. On récupère "items" ET "delivery" (envoyés par Cart.jsx)
     const { items, delivery } = req.body; 
     const userId = req.user.id;
 
@@ -13,96 +12,55 @@ export const createOrder = async (req, res) => {
     let total = 0;
     const itemsWithPrice = [];
 
+    // UNE SEULE BOUCLE : On vérifie TOUT et on prépare les données
     for (let item of items) {
       const product = await client.query("SELECT * FROM products WHERE id = $1", [item.product_id]);
       
-      if (product.rows.length === 0) {
-        throw new Error(`Produit introuvable`); // Sera capturé par le catch
-      }
+      if (product.rows.length === 0) throw new Error(`Produit ${item.product_id} introuvable`);
       
       const p = product.rows[0];
+
+      // Vérification du stock
       if (p.stock < item.quantity) {
-        // On lance une erreur spécifique qui sera renvoyée en 400 (Bad Request)
-        return res.status(400).json({ message: `Désolé, le stock pour "${p.name}" est insuffisant.` });
+        // On stoppe tout proprement si le stock est insuffisant
+        await client.query("ROLLBACK");
+        return res.status(400).json({ message: `Stock insuffisant pour "${p.name}"` });
       }
 
-      // Vérification des stocks et calcul du total
-      for (let item of items) {
-        const product = await client.query("SELECT * FROM products WHERE id = $1", [item.product_id]);
+      total += p.price * item.quantity;
+      itemsWithPrice.push({ ...item, price: p.price });
 
-        if (product.rows.length === 0) throw new Error(`Produit ${item.product_id} introuvable`);
-        
-        const p = product.rows[0];
-        if (p.stock < item.quantity) throw new Error(`Stock insuffisant pour ${p.name}`);
+      // Mise à jour du stock
+      await client.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [item.quantity, item.product_id]);
+    }
 
-        total += p.price * item.quantity;
-        itemsWithPrice.push({ ...item, price: p.price });
+    // Création de la commande
+    const orderResult = await client.query(
+      "INSERT INTO orders (user_id, total, delivery) VALUES ($1, $2, $3) RETURNING id",
+      [userId, total, JSON.stringify(delivery)] 
+    );
+    const orderId = orderResult.rows[0].id;
 
-        // Mise à jour du stock
-        await client.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [item.quantity, item.product_id]);
-      }
-
-      // 2. Création de la commande avec la colonne DELIVERY (JSON)
-      const orderResult = await client.query(
-        "INSERT INTO orders (user_id, total, delivery) VALUES ($1, $2, $3) RETURNING *",
-        [userId, total, JSON.stringify(delivery)] 
+    // Insertion des articles dans order_items
+    for (let item of itemsWithPrice) {
+      await client.query(
+        "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)",
+        [orderId, item.product_id, item.quantity, item.price]
       );
-      const orderId = orderResult.rows[0].id;
-
-      // 3. Insertion des articles
-      for (let item of itemsWithPrice) {
-        await client.query(
-          "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)",
-          [orderId, item.product_id, item.quantity, item.price]
-        );
-      }
     }
 
     await client.query("COMMIT");
-    res.status(201).json({ message: "Commande créée avec succès", order: orderResult.rows[0] });
+    res.status(201).json({ message: "Commande créée avec succès", orderId });
 
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Erreur createOrder:", error.message);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Erreur lors du traitement de la commande" });
   } finally {
     client.release();
   }
 };
 
-// --- AFFICHAGE ADMIN (Toutes les commandes avec delivery) ---
-export const getAllOrders = async (req, res) => {
-  try {
-    const { status } = req.query;
-
-    let query = `
-      SELECT 
-        orders.id,
-        users.username AS name,
-        users.email,
-        orders.total,
-        orders.status,
-        orders.created_at,
-        orders.delivery
-      FROM orders
-      JOIN users ON orders.user_id = users.id
-    `;
-
-    const values = [];
-    if (status) {
-      query += " WHERE orders.status = $1";
-      values.push(status);
-    }
-
-    query += " ORDER BY orders.id DESC";
-
-    const result = await pool.query(query, values);
-    res.json(result.rows);
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
 // --- DÉTAILS DES ARTICLES D'UNE COMMANDE ---
 export const getOrderItems = async (req, res) => {
