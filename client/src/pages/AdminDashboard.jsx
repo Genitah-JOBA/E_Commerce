@@ -61,37 +61,61 @@ function AdminDashboard() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // VALIDATIONS AVEC MESSAGEBOX (Swal)
-    if (!form.image) {
-      return Swal.fire({ icon: 'warning', title: 'Image manquante', text: 'Veuillez choisir une image pour le produit.', confirmButtonColor: '#ada194' });
-    }
+  e.preventDefault();
+  
+  // 1. Validations de base
+  if (!form.image) {
+    return Swal.fire({ icon: 'warning', title: 'Image manquante', text: 'Veuillez choisir une image.', confirmButtonColor: '#ada194' });
+  }
 
-    if (isNaN(form.price) || form.price <= 0) {
-      return Swal.fire({ icon: 'error', title: 'Prix invalide', text: 'Le prix doit être un nombre positif.' });
-    }
+  // 2. Recherche d'un doublon exact (Nom + Description + Image)
+  const existingProduct = products.find(p => 
+    p.name.toLowerCase() === form.name.toLowerCase() && 
+    p.description === form.description && 
+    p.image === form.image
+  );
 
-    try {
+  try {
+    if (existingProduct) {
+      // --- LOGIQUE DE MISE À JOUR (FUSION) ---
+      const updatedStock = Number(existingProduct.stock) + Number(form.stock);
+      
+      await API.put(`/products/${existingProduct.id}`, {
+        ...existingProduct,
+        stock: updatedStock,
+        price: form.price // On prend le prix de la dernière version
+      });
+
+      Swal.fire({ 
+        icon: 'info', 
+        title: 'Produit mis à jour', 
+        text: `Le stock de ${form.name} a été augmenté (+${form.stock}). Nouveau total : ${updatedStock}`,
+        confirmButtonColor: '#ada194'
+      });
+
+    } else {
+      // --- LOGIQUE DE CRÉATION CLASSIQUE ---
       await API.post("/products", form);
       
-      // Message de succès
       Swal.fire({ 
         icon: 'success', 
         title: 'Produit ajouté !', 
         text: `${form.name} est maintenant dans le catalogue.`,
-        timer: 2500, 
+        timer: 2000, 
         showConfirmButton: false,
-        background: '#fff',
         iconColor: '#ada194'
       });
-
-      fetchProducts();
-      setForm({ name: "", description: "", price: "", stock: "", image: "" });
-    } catch (err) { 
-      Swal.fire('Erreur serveur', "Le serveur n'a pas pu enregistrer le produit.", 'error'); 
     }
-  };
+
+    // Réinitialisation et rafraîchissement
+    fetchProducts();
+    setForm({ name: "", description: "", price: "", stock: "", image: "" });
+
+  } catch (err) { 
+    console.error(err);
+    Swal.fire('Erreur serveur', "Impossible d'enregistrer les modifications.", 'error'); 
+  }
+};
 
   const handleDelete = async (id) => {
     // MessageBox de confirmation
@@ -131,8 +155,6 @@ function AdminDashboard() {
       default: return null;
     }
   };
-
-  // ... (garder les imports et la logique inchangés jusqu'au return)
 
   return (
     // Suppression du 'fixed' et 'h-screen' qui posent problème sur mobile
