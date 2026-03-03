@@ -85,7 +85,7 @@ function Cart() {
   );
 
   // FONCTION UNIQUE POUR PASSER COMMANDE
-  const handleCheckout = () => {
+    const handleCheckout = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -109,12 +109,12 @@ function Cart() {
         <div class="flex flex-col gap-3 text-left">
           <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
           <div>
-            <label class="text-xs font-bold text-gray-400">NOM COMPLET</label>
-            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" placeholder="Nom du destinataire">
+            <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
+            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" placeholder="Ex: Jean Dupont">
           </div>
           <div class="flex gap-2">
             <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE</label>
+              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
               <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034 XX XXX XX">
             </div>
             <div class="w-1/2">
@@ -143,17 +143,40 @@ function Cart() {
       cancelButtonText: 'Annuler',
       confirmButtonColor: '#0f172a',
       preConfirm: () => {
-        const name = document.getElementById('swal-name').value;
-        const phone = document.getElementById('swal-phone').value;
-        const email = document.getElementById('swal-email').value;
-        const address = document.getElementById('swal-address').value;
+        const name = document.getElementById('swal-name').value.trim();
+        const phone = document.getElementById('swal-phone').value.trim();
+        const email = document.getElementById('swal-email').value.trim();
+        const address = document.getElementById('swal-address').value.trim();
         const date = document.getElementById('swal-date').value;
         const time = document.getElementById('swal-time').value;
 
-        if (!name || !phone || !address || !date || !time) {
-          Swal.showValidationMessage(`Veuillez remplir tous les champs obligatoires`);
+        // 1. Validation Nom (Pas de chiffres ni caractères spéciaux)
+        const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
+        if (!name || !nameRegex.test(name)) {
+          Swal.showValidationMessage(`Nom invalide : utilisez uniquement des lettres`);
           return false;
         }
+
+        // 2. Validation Téléphone (10 chiffres, commence par 032, 033, 034, 037, 038)
+        const phoneRegex = /^(032|033|034|037|038)\d{7}$/;
+        if (!phoneRegex.test(phone)) {
+          Swal.showValidationMessage(`Téléphone invalide : 10 chiffres commençant par 032/33/34/37/38`);
+          return false;
+        }
+
+        // 3. Validation Email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+          Swal.showValidationMessage(`Adresse email invalide`);
+          return false;
+        }
+
+        // 4. Validation reste des champs
+        if (!address || !date || !time) {
+          Swal.showValidationMessage(`Veuillez remplir l'adresse, la date et l'heure`);
+          return false;
+        }
+
         return { name, phone, email, address, date, time };
       }
     }).then((result) => {
@@ -162,6 +185,7 @@ function Cart() {
       }
     });
   };
+
 
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
