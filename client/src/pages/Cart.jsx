@@ -12,10 +12,27 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { useEffect, useState } from "react";
+import API from "../api/axios";
+import Swal from "sweetalert2";
+import { 
+  Trash2, 
+  Plus, 
+  Minus, 
+  ShoppingCart, 
+  CreditCard, 
+  PackageOpen,
+  ArrowLeft 
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+
 function Cart() {
   const [cart, setCart] = useState([]);
+  const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user")) || {}; 
+  // On récupère l'utilisateur en haut du composant pour qu'il soit accessible partout
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : {};
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -58,13 +75,6 @@ function Cart() {
         const updatedCart = [...cart];
         updatedCart.splice(index, 1);
         updateCart(updatedCart);
-        
-        Swal.fire({
-          title: "Supprimé",
-          icon: "success",
-          timer: 1000,
-          showConfirmButton: false
-        });
       }
     });
   };
@@ -74,14 +84,33 @@ function Cart() {
     0
   );
 
+  // FONCTION UNIQUE POUR PASSER COMMANDE
   const handleCheckout = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      Swal.fire({
+        icon: "error",
+        title: "Connexion requise",
+        text: "Veuillez vous connecter pour passer commande.",
+        confirmButtonColor: "#0f172a"
+      }).then(() => navigate("/auth"));
+      return;
+    }
+
+    if (cart.length === 0) {
+      Swal.fire({ icon: "info", title: "Panier vide", text: "Ajoutez des produits avant de commander." });
+      return;
+    }
+
     Swal.fire({
       title: 'Détails de la livraison 🚚',
       html: `
         <div class="flex flex-col gap-3 text-left">
+          <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
           <div>
             <label class="text-xs font-bold text-gray-400">NOM COMPLET</label>
-            <input id="swal-name" class="swal2-input !m-0 !w-full" placeholder="Ex: Jean Dupont">
+            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" placeholder="Nom du destinataire">
           </div>
           <div class="flex gap-2">
             <div class="w-1/2">
@@ -113,9 +142,7 @@ function Cart() {
       confirmButtonText: 'Confirmer la commande',
       cancelButtonText: 'Annuler',
       confirmButtonColor: '#0f172a',
-      focusConfirm: false,
       preConfirm: () => {
-        // Récupération des valeurs
         const name = document.getElementById('swal-name').value;
         const phone = document.getElementById('swal-phone').value;
         const email = document.getElementById('swal-email').value;
@@ -123,7 +150,6 @@ function Cart() {
         const date = document.getElementById('swal-date').value;
         const time = document.getElementById('swal-time').value;
 
-        // Contrôle de champ interne
         if (!name || !phone || !address || !date || !time) {
           Swal.showValidationMessage(`Veuillez remplir tous les champs obligatoires`);
           return false;
@@ -132,7 +158,6 @@ function Cart() {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        // Ici vous appelez votre API pour enregistrer la commande
         sendOrderToDatabase(result.value);
       }
     });
@@ -148,17 +173,14 @@ function Cart() {
     try {
       await API.post(
         "/orders",
-        { 
-          items: orderItems,
-          delivery: deliveryData // On envoie les infos de livraison au backend
-        },
+        { items: orderItems, delivery: deliveryData },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       Swal.fire({
         icon: 'success',
-        title: 'Commande enregistrée !',
-        text: 'Votre colis Aura Privé arrive bientôt.',
+        title: 'Commande validée !',
+        text: 'Merci pour votre confiance. Nous traitons votre colis.',
         confirmButtonColor: '#0f172a'
       });
 
@@ -166,68 +188,6 @@ function Cart() {
       setCart([]);
     } catch (err) {
       Swal.fire('Erreur', err.response?.data?.message || 'Erreur lors de la commande', 'error');
-    }
-  };
-
-  const handleOrder = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      Swal.fire({
-        icon: "error",
-        title: "Connexion requise",
-        text: "Veuillez vous connecter pour passer commande.",
-        confirmButtonColor: "#ada194"
-      });
-      return;
-    }
-
-    if (cart.length === 0) {
-      Swal.fire({ icon: "info", title: "Panier vide" });
-      return;
-    }
-
-    // Confirmation MessageBox before placing order
-    const result = await Swal.fire({
-      title: "Confirmer la commande",
-      text: `Montant total : ${total.toLocaleString()} Ar. Souhaitez-vous valider ?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#0f172a",
-      cancelButtonColor: "#ada194",
-      confirmButtonText: "Valider la commande",
-      cancelButtonText: "Vérifier encore"
-    });
-
-    if (result.isConfirmed) {
-      const orderItems = cart.map(item => ({
-        product_id: item.id,
-        quantity: item.quantity
-      }));
-
-      try {
-        await API.post(
-          "/orders",
-          { items: orderItems },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        Swal.fire({
-          icon: "success",
-          title: "Commande validée !",
-          text: "Merci pour votre confiance. Nous traitons votre commande.",
-          confirmButtonColor: "#ada194"
-        });
-
-        localStorage.removeItem("cart");
-        setCart([]);
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Erreur",
-          text: error.response?.data?.error || "Une erreur est survenue lors de la commande."
-        });
-      }
     }
   };
 
