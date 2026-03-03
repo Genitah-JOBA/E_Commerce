@@ -71,91 +71,112 @@ function Cart() {
   );
 
   const handleCheckout = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      Swal.fire({ icon: "error", title: "Connexion requise", text: "Connectez-vous pour commander.", confirmButtonColor: "#0f172a" });
-      return;
-    }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    Swal.fire({ icon: "error", title: "Connexion requise", confirmButtonColor: "#0f172a" });
+    return;
+  }
 
-    Swal.fire({
-      title: 'Détails de la livraison 🚚',
-      html: `
-        <div class="flex flex-col gap-3 text-left">
-          <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
-          <div>
-            <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
-            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" style="cursor:text">
+  Swal.fire({
+    title: 'Détails de la livraison 🚚',
+    html: `
+      <div class="flex flex-col gap-3 text-left">
+        <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
+        <div>
+          <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
+          <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" style="cursor:text">
+        </div>
+        <div class="flex gap-2">
+          <div class="w-1/2">
+            <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
+            <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034XXXXXXX" maxlength="10" style="cursor:text">
           </div>
-          <div class="flex gap-2">
-            <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
-              <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034XXXXXXX" style="cursor:text">
-            </div>
-            <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">EMAIL</label>
-              <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}" style="cursor:text">
-            </div>
-          </div>
-          <div>
-            <label class="text-xs font-bold text-gray-400">ADRESSE PRÉCISE</label>
-            <input id="swal-address" class="swal2-input !m-0 !w-full" style="cursor:text">
-          </div>
-          <div class="flex gap-2">
-            <div class="w-1/2"><label class="text-xs font-bold text-gray-400">DATE</label><input id="swal-date" type="date" class="swal2-input !m-0 !w-full"></div>
-            <div class="w-1/2"><label class="text-xs font-bold text-gray-400">HEURE</label><input id="swal-time" type="time" class="swal2-input !m-0 !w-full"></div>
+          <div class="w-1/2">
+            <label class="text-xs font-bold text-gray-400">EMAIL</label>
+            <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}" style="cursor:text">
           </div>
         </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Confirmer',
-      confirmButtonColor: '#0f172a',
-      didOpen: () => {
-        Swal.getConfirmButton().style.cursor = 'pointer';
-        Swal.getCancelButton().style.cursor = 'pointer';
+        <div>
+          <label class="text-xs font-bold text-gray-400">ADRESSE PRÉCISE</label>
+          <input id="swal-address" class="swal2-input !m-0 !w-full" style="cursor:text">
+        </div>
+        <div class="flex gap-2">
+          <div class="w-1/2"><label class="text-xs font-bold text-gray-400">DATE</label><input id="swal-date" type="date" class="swal2-input !m-0 !w-full"></div>
+          <div class="w-1/2"><label class="text-xs font-bold text-gray-400">HEURE</label><input id="swal-time" type="time" class="swal2-input !m-0 !w-full"></div>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Confirmer',
+    confirmButtonColor: '#0f172a',
+    didOpen: () => {
+      // Force le curseur main sur les boutons
+      Swal.getConfirmButton().style.cursor = 'pointer';
+      Swal.getCancelButton().style.cursor = 'pointer';
 
-        const inputs = {
-          name: { el: document.getElementById('swal-name'), reg: /^[a-zA-ZÀ-ÿ\s'-]+$/, msg: "Le nom ne doit contenir que des lettres." },
-          phone: { el: document.getElementById('swal-phone'), reg: /^(032|033|034|037|038)\d{7}$/, msg: "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38)." },
-          email: { el: document.getElementById('swal-email'), reg: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: "L'adresse email est incorrecte." }
-        };
+      const nameInp = document.getElementById('swal-name');
+      const phoneInp = document.getElementById('swal-phone');
 
-        // LOGIQUE DE BLOCAGE (FOCUS TRAP)
-        Object.values(inputs).forEach(item => {
-          item.el.addEventListener('focusout', async function() {
-            const val = this.value.trim();
-            if (val !== "" && !item.reg.test(val)) {
-              await Swal.fire({
-                title: "Saisie incorrecte",
-                text: item.msg,
-                icon: "error",
-                confirmButtonText: "Corriger",
-                confirmButtonColor: "#0f172a"
-              });
-              setTimeout(() => item.el.focus(), 10);
-            }
-          });
+      // 1. BLOCAGE NOM : Supprime instantanément tout ce qui n'est pas une lettre
+      nameInp.addEventListener('input', (e) => {
+        const start = e.target.selectionStart;
+        e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
+        e.target.setSelectionRange(start, start);
+      });
+
+      // 2. BLOCAGE TÉLÉPHONE : Supprime tout ce qui n'est pas un chiffre
+      phoneInp.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, "");
+      });
+
+      // 3. FOCUS TRAP (Message Box si invalide en quittant le champ)
+      const inputs = {
+        name: { el: nameInp, reg: /^[a-zA-ZÀ-ÿ\s'-]+$/, msg: "Le nom ne doit contenir que des lettres." },
+        phone: { el: phoneInp, reg: /^(032|033|034|037|038)\d{7}$/, msg: "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38)." }
+      };
+
+      Object.values(inputs).forEach(item => {
+        item.el.addEventListener('focusout', async function() {
+          const val = this.value.trim();
+          if (val !== "" && !item.reg.test(val)) {
+            await Swal.fire({
+              title: "Saisie incorrecte",
+              text: item.msg,
+              icon: "error",
+              confirmButtonText: "Corriger",
+              confirmButtonColor: "#0f172a"
+            });
+            setTimeout(() => item.el.focus(), 10);
+          }
         });
-      },
-      preConfirm: () => {
-        const data = {
-          name: document.getElementById('swal-name').value.trim(),
-          phone: document.getElementById('swal-phone').value.trim(),
-          email: document.getElementById('swal-email').value.trim(),
-          address: document.getElementById('swal-address').value.trim(),
-          date: document.getElementById('swal-date').value,
-          time: document.getElementById('swal-time').value
-        };
+      });
+    },
+    preConfirm: () => {
+      const data = {
+        name: document.getElementById('swal-name').value.trim(),
+        phone: document.getElementById('swal-phone').value.trim(),
+        email: document.getElementById('swal-email').value.trim(),
+        address: document.getElementById('swal-address').value.trim(),
+        date: document.getElementById('swal-date').value,
+        time: document.getElementById('swal-time').value
+      };
 
-        if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
-          Swal.showValidationMessage(`Tous les champs sont obligatoires`);
-          return false;
-        }
-        return data;
+      if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
+        Swal.showValidationMessage(`Tous les champs sont obligatoires`);
+        return false;
       }
-    }).then((result) => {
-      if (result.isConfirmed) sendOrderToDatabase(result.value);
-    });
-  };
+      // Validation finale du téléphone avant envoi
+      if (!/^(032|033|034|037|038)\d{7}$/.test(data.phone)) {
+        Swal.showValidationMessage(`Préfixe téléphone invalide (032/33/34/37/38)`);
+        return false;
+      }
+      return data;
+    }
+  }).then((result) => {
+    if (result.isConfirmed) sendOrderToDatabase(result.value);
+  });
+};
+
 
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
