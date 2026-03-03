@@ -92,7 +92,7 @@ const Navbar = () => {
           {currentUser && (
             isAdmin ? (
               <>
-                <Link to="/products" className={linkClass}><Package size={18} /> Produits</Link>
+                <Link to="/" className={linkClass}><Home size={18} /> Accueil</Link>
                 <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition cursor-pointer">
                   <LayoutDashboard size={18} /> Dashboard
                 </Link>

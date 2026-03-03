@@ -132,7 +132,8 @@ export const getAllOrders = async (req, res) => {
         users.email,
         orders.total,
         orders.status,
-        orders.created_at
+        orders.created_at,
+        orders.delivery
       FROM orders
       JOIN users ON orders.user_id = users.id
     `;

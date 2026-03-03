@@ -76,6 +76,8 @@ function AdminOrders() {
   const viewDetails = async (order) => {
     try {
       const res = await API.get(`/orders/${order.id}/items`);
+
+      const delivery = order.delivery || {};
       
       // Build HTML Table for the Items
       let itemsHTML = `
