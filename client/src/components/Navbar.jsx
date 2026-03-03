@@ -93,9 +93,10 @@ const Navbar = () => {
             isAdmin ? (
               <>
                 <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition cursor-pointer">
-                  <LayoutDashboard size={18} /> Admin
+                  <LayoutDashboard size={18} /> Dashboard
                 </Link>
                 <Link to="/admin/orders" className={linkClass}><ClipboardList size={18} /> Commandes</Link>
+                <Link to="/products" className={linkClass}><Package size={18} /> Produits</Link>
               </>
             ) : (
               <>
