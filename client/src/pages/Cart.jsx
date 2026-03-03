@@ -71,125 +71,124 @@ function Cart() {
   );
 
   const handleCheckout = () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    Swal.fire({ icon: "error", title: "Connexion requise", confirmButtonColor: "#0f172a" });
-    return;
-  }
-
-  // 1. On récupère la date du jour au format YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0];
-
-  Swal.fire({
-    title: 'Détails de la livraison 🚚',
-    html: `
-      <div class="flex flex-col gap-3 text-left">
-        <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
-        <div>
-          <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
-          <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" style="cursor:text">
-        </div>
-        <div class="flex gap-2">
-          <div class="w-1/2">
-            <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
-            <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034XXXXXXX" maxlength="10" style="cursor:text">
-          </div>
-          <div class="w-1/2">
-            <label class="text-xs font-bold text-gray-400">EMAIL</label>
-            <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}" style="cursor:text">
-          </div>
-        </div>
-        <div>
-          <label class="text-xs font-bold text-gray-400">ADRESSE PRÉCISE</label>
-          <input id="swal-address" class="swal2-input !m-0 !w-full" style="cursor:text">
-        </div>
-        <div class="flex gap-2">
-          <div class="w-1/2">
-            <label class="text-xs font-bold text-gray-400">DATE</label>
-            <!-- AJOUT : min="${today}" pour griser les dates passées dans le calendrier -->
-            <input id="swal-date" type="date" min="${today}" class="swal2-input !m-0 !w-full">
-          </div>
-          <div class="w-1/2">
-            <label class="text-xs font-bold text-gray-400">HEURE</label>
-            <input id="swal-time" type="time" class="swal2-input !m-0 !w-full">
-          </div>
-        </div>
-      </div>
-    `,
-    showCancelButton: true,
-    confirmButtonText: 'Confirmer',
-    confirmButtonColor: '#0f172a',
-    didOpen: () => {
-      Swal.getConfirmButton().style.cursor = 'pointer';
-      Swal.getCancelButton().style.cursor = 'pointer';
-
-      const nameInp = document.getElementById('swal-name');
-      const phoneInp = document.getElementById('swal-phone');
-
-      nameInp.addEventListener('input', (e) => {
-        const start = e.target.selectionStart;
-        e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
-        e.target.setSelectionRange(start, start);
-      });
-
-      phoneInp.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/\D/g, "");
-      });
-
-      const inputs = {
-        name: { el: nameInp, reg: /^[a-zA-ZÀ-ÿ\s'-]+$/, msg: "Le nom ne doit contenir que des lettres." },
-        phone: { el: phoneInp, reg: /^(032|033|034|037|038)\d{7}$/, msg: "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38)." }
-      };
-
-      Object.values(inputs).forEach(item => {
-        item.el.addEventListener('focusout', async function() {
-          const val = this.value.trim();
-          if (val !== "" && !item.reg.test(val)) {
-            await Swal.fire({ title: "Saisie incorrecte", text: item.msg, icon: "error", confirmButtonText: "Corriger", confirmButtonColor: "#0f172a" });
-            setTimeout(() => item.el.focus(), 10);
-          }
-        });
-      });
-    },
-    preConfirm: () => {
-      const data = {
-        name: document.getElementById('swal-name').value.trim(),
-        phone: document.getElementById('swal-phone').value.trim(),
-        email: document.getElementById('swal-email').value.trim(),
-        address: document.getElementById('swal-address').value.trim(),
-        date: document.getElementById('swal-date').value,
-        time: document.getElementById('swal-time').value
-      };
-
-      // 1. Vérification champs obligatoires
-      if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
-        Swal.showValidationMessage(`Tous les champs sont obligatoires`);
-        return false;
-      }
-
-      // 2. BLOCAGE DATE PASSÉE (Sécurité serveur/logique)
-      const selectedDate = new Date(data.date);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0); // On compare uniquement les jours
-
-      if (selectedDate < currentDate) {
-        Swal.showValidationMessage(`La date ne peut pas être dans le passé (2005 interdit)`);
-        return false;
-      }
-
-      // 3. Validation téléphone
-      if (!/^(032|033|034|037|038)\d{7}$/.test(data.phone)) {
-        Swal.showValidationMessage(`Préfixe téléphone invalide (032/33/34/37/38)`);
-        return false;
-      }
-
-      return data;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({ icon: "error", title: "Connexion requise", confirmButtonColor: "#0f172a" });
+      return;
     }
-  }).then((result) => {
-    if (result.isConfirmed) sendOrderToDatabase(result.value);
-  });
-};
 
+    // 1. On récupère la date du jour au format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+
+    Swal.fire({
+      title: 'Détails de la livraison',
+      html: `
+        <div class="flex flex-col gap-3 text-left">
+          <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
+          <div>
+            <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
+            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" style="cursor:text">
+          </div>
+          <div class="flex gap-2">
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
+              <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034XXXXXXX" maxlength="10" style="cursor:text">
+            </div>
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">EMAIL</label>
+              <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}" style="cursor:text">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-400">ADRESSE PRÉCISE</label>
+            <input id="swal-address" class="swal2-input !m-0 !w-full" style="cursor:text">
+          </div>
+          <div class="flex gap-2">
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">DATE</label>
+              <!-- AJOUT : min="${today}" pour griser les dates passées dans le calendrier -->
+              <input id="swal-date" type="date" min="${today}" class="swal2-input !m-0 !w-full">
+            </div>
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">HEURE</label>
+              <input id="swal-time" type="time" class="swal2-input !m-0 !w-full">
+            </div>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Confirmer',
+      confirmButtonColor: '#0f172a',
+      didOpen: () => {
+        Swal.getConfirmButton().style.cursor = 'pointer';
+        Swal.getCancelButton().style.cursor = 'pointer';
+
+        const nameInp = document.getElementById('swal-name');
+        const phoneInp = document.getElementById('swal-phone');
+
+        nameInp.addEventListener('input', (e) => {
+          const start = e.target.selectionStart;
+          e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
+          e.target.setSelectionRange(start, start);
+        });
+
+        phoneInp.addEventListener('input', (e) => {
+          e.target.value = e.target.value.replace(/\D/g, "");
+        });
+
+        const inputs = {
+          name: { el: nameInp, reg: /^[a-zA-ZÀ-ÿ\s'-]+$/, msg: "Le nom ne doit contenir que des lettres." },
+          phone: { el: phoneInp, reg: /^(032|033|034|037|038)\d{7}$/, msg: "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38)." }
+        };
+
+        Object.values(inputs).forEach(item => {
+          item.el.addEventListener('focusout', async function() {
+            const val = this.value.trim();
+            if (val !== "" && !item.reg.test(val)) {
+              await Swal.fire({ title: "Saisie incorrecte", text: item.msg, icon: "error", confirmButtonText: "Corriger", confirmButtonColor: "#0f172a" });
+              setTimeout(() => item.el.focus(), 10);
+            }
+          });
+        });
+      },
+      preConfirm: () => {
+        const data = {
+          name: document.getElementById('swal-name').value.trim(),
+          phone: document.getElementById('swal-phone').value.trim(),
+          email: document.getElementById('swal-email').value.trim(),
+          address: document.getElementById('swal-address').value.trim(),
+          date: document.getElementById('swal-date').value,
+          time: document.getElementById('swal-time').value
+        };
+
+        // 1. Vérification champs obligatoires
+        if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
+          Swal.showValidationMessage(`Tous les champs sont obligatoires`);
+          return false;
+        }
+
+        // 2. BLOCAGE DATE PASSÉE (Sécurité serveur/logique)
+        const selectedDate = new Date(data.date);
+        const currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0); // On compare uniquement les jours
+
+        if (selectedDate < currentDate) {
+          Swal.showValidationMessage(`La date ne peut pas être dans le passé (2005 interdit)`);
+          return false;
+        }
+
+        // 3. Validation téléphone
+        if (!/^(032|033|034|037|038)\d{7}$/.test(data.phone)) {
+          Swal.showValidationMessage(`Préfixe téléphone invalide (032/33/34/37/38)`);
+          return false;
+        }
+
+        return data;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) sendOrderToDatabase(result.value);
+    });
+  };
 
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
