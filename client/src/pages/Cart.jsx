@@ -86,66 +86,79 @@ function Cart() {
 
   // FONCTION UNIQUE POUR PASSER COMMANDE
     const handleCheckout = () => {
-    // 1. Définition des règles de contrôle
-    const validateData = (data) => {
-      const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
-      const phoneRegex = /^(032|033|034|037|038)\d{7}$/;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!nameRegex.test(data.name)) return "Le nom ne doit contenir que des lettres.";
-      if (!phoneRegex.test(data.phone)) return "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38).";
-      if (!emailRegex.test(data.email)) return "Format d'email invalide.";
-      if (!data.address || !data.date || !data.time) return "Veuillez remplir tous les champs de livraison.";
-      return null;
-    };
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({ icon: "error", title: "Login required", confirmButtonColor: "#0f172a" });
+      return;
+    }
 
     Swal.fire({
-      title: 'Détails de la livraison 🚚',
+      title: 'Delivery Details 🚚',
       html: `
         <div class="flex flex-col gap-3 text-left">
           <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
           <div>
-            <label class="text-xs font-bold text-gray-400">NOM COMPLET</label>
-            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" placeholder="Ex: Jean Dupont">
+            <label class="text-xs font-bold text-gray-400">FULL NAME (Letters only)</label>
+            <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" style="cursor:text">
           </div>
           <div class="flex gap-2">
             <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE</label>
-              <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034 XX XXX XX">
+              <label class="text-xs font-bold text-gray-400">PHONE (10 digits)</label>
+              <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034XXXXXXX" style="cursor:text">
             </div>
             <div class="w-1/2">
               <label class="text-xs font-bold text-gray-400">EMAIL</label>
-              <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}">
+              <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}" style="cursor:text">
             </div>
           </div>
           <div>
-            <label class="text-xs font-bold text-gray-400">ADRESSE PRÉCISE</label>
-            <input id="swal-address" class="swal2-input !m-0 !w-full" placeholder="Lot, Quartier, Ville">
+            <label class="text-xs font-bold text-gray-400">ADDRESS</label>
+            <input id="swal-address" class="swal2-input !m-0 !w-full" placeholder="Lot, City..." style="cursor:text">
           </div>
           <div class="flex gap-2">
-            <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">DATE</label>
-              <input id="swal-date" type="date" class="swal2-input !m-0 !w-full">
-            </div>
-            <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">HEURE</label>
-              <input id="swal-time" type="time" class="swal2-input !m-0 !w-full">
-            </div>
+            <div class="w-1/2"><label class="text-xs font-bold text-gray-400">DATE</label><input id="swal-date" type="date" class="swal2-input !m-0 !w-full"></div>
+            <div class="w-1/2"><label class="text-xs font-bold text-gray-400">TIME</label><input id="swal-time" type="time" class="swal2-input !m-0 !w-full"></div>
           </div>
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Confirmer la commande',
-      cancelButtonText: 'Annuler',
+      confirmButtonText: 'Confirm',
       confirmButtonColor: '#0f172a',
-      // CURSEUR MAIN FORCÉ
       didOpen: () => {
-        const confirmBtn = Swal.getConfirmButton();
-        const cancelBtn = Swal.getCancelButton();
-        if (confirmBtn) confirmBtn.style.cursor = 'pointer';
-        if (cancelBtn) cancelBtn.style.cursor = 'pointer';
+        // 1. Force Hand Cursor on Buttons
+        Swal.getConfirmButton().style.cursor = 'pointer';
+        Swal.getCancelButton().style.cursor = 'pointer';
+
+        const nameInput = document.getElementById('swal-name');
+        const phoneInput = document.getElementById('swal-phone');
+        const emailInput = document.getElementById('swal-email');
+
+        // 2. THE LOCK LOGIC (onBlur)
+        const lockField = (input, regex, message) => {
+          input.addEventListener('blur', () => {
+            const val = input.value.trim();
+            if (val !== "" && !regex.test(val)) {
+              Swal.fire({
+                title: "Invalid Field",
+                text: message,
+                icon: "error",
+                confirmButtonText: "Correct it",
+                confirmButtonColor: "#0f172a"
+              }).then(() => {
+                // FORCE THE CURSOR BACK
+                setTimeout(() => input.focus(), 10);
+              });
+            }
+          });
+        };
+
+        // Apply specific rules
+        lockField(nameInput, /^[a-zA-ZÀ-ÿ\s'-]+$/, "Names cannot contain numbers or symbols.");
+        lockField(phoneInput, /^(032|033|034|037|038)\d{7}$/, "Phone must be 10 digits starting with 032/33/34/37/38.");
+        lockField(emailInput, /^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email address.");
       },
       preConfirm: () => {
+        // Final Check before closing the whole thing
         const data = {
           name: document.getElementById('swal-name').value.trim(),
           phone: document.getElementById('swal-phone').value.trim(),
@@ -155,21 +168,14 @@ function Cart() {
           time: document.getElementById('swal-time').value
         };
 
-        const errorMessage = validateData(data);
-
-        if (errorMessage) {
-          // Affiche la MessageBox d'erreur par-dessus la modale (comme ton Login)
-          Swal.showValidationMessage(errorMessage); 
-          
-          // Focus automatique sur le champ (simulé par SweetAlert2)
-          return false; 
+        if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
+          Swal.showValidationMessage(`All fields are mandatory`);
+          return false;
         }
         return data;
       }
     }).then((result) => {
-      if (result.isConfirmed) {
-        sendOrderToDatabase(result.value);
-      }
+      if (result.isConfirmed) sendOrderToDatabase(result.value);
     });
   };
 
