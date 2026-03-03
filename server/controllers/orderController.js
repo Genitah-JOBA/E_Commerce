@@ -4,7 +4,16 @@ import pool from "../config/db.js";
 export const createOrder = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { items, delivery } = req.body; 
+    const { 
+      items, 
+      name, 
+      phone, 
+      email, 
+      address, 
+      delivery_date, 
+      delivery_time 
+    } = req.body;
+
     const userId = req.user.id;
 
     await client.query("BEGIN");
@@ -12,17 +21,13 @@ export const createOrder = async (req, res) => {
     let total = 0;
     const itemsWithPrice = [];
 
-    // UNE SEULE BOUCLE : On vérifie TOUT et on prépare les données
     for (let item of items) {
       const product = await client.query("SELECT * FROM products WHERE id = $1", [item.product_id]);
-      
       if (product.rows.length === 0) throw new Error(`Produit ${item.product_id} introuvable`);
       
       const p = product.rows[0];
 
-      // Vérification du stock
       if (p.stock < item.quantity) {
-        // On stoppe tout proprement si le stock est insuffisant
         await client.query("ROLLBACK");
         return res.status(400).json({ message: `Stock insuffisant pour "${p.name}"` });
       }
@@ -30,18 +35,20 @@ export const createOrder = async (req, res) => {
       total += p.price * item.quantity;
       itemsWithPrice.push({ ...item, price: p.price });
 
-      // Mise à jour du stock
       await client.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [item.quantity, item.product_id]);
     }
 
-    // Création de la commande
+    // --- MODIFICATION ICI : INSERTION DANS LES COLONNES INDIVIDUELLES ---
     const orderResult = await client.query(
-      "INSERT INTO orders (user_id, total, delivery) VALUES ($1, $2, $3) RETURNING id",
-      [userId, total, JSON.stringify(delivery)] 
+      `INSERT INTO orders 
+       (user_id, total, name, phone, email, address, delivery_date, delivery_time) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       RETURNING id`,
+      [userId, total, name, phone, email, address, delivery_date, delivery_time] 
     );
+    
     const orderId = orderResult.rows[0].id;
 
-    // Insertion des articles dans order_items
     for (let item of itemsWithPrice) {
       await client.query(
         "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)",
@@ -60,7 +67,6 @@ export const createOrder = async (req, res) => {
     client.release();
   }
 };
-
 
 // --- DÉTAILS DES ARTICLES D'UNE COMMANDE ---
 export const getOrderItems = async (req, res) => {
