@@ -13,35 +13,49 @@ export const createOrder = async (req, res) => {
     let total = 0;
     const itemsWithPrice = [];
 
-    // Vérification des stocks et calcul du total
     for (let item of items) {
       const product = await client.query("SELECT * FROM products WHERE id = $1", [item.product_id]);
-
-      if (product.rows.length === 0) throw new Error(`Produit ${item.product_id} introuvable`);
+      
+      if (product.rows.length === 0) {
+        throw new Error(`Produit introuvable`); // Sera capturé par le catch
+      }
       
       const p = product.rows[0];
-      if (p.stock < item.quantity) throw new Error(`Stock insuffisant pour ${p.name}`);
+      if (p.stock < item.quantity) {
+        // On lance une erreur spécifique qui sera renvoyée en 400 (Bad Request)
+        return res.status(400).json({ message: `Désolé, le stock pour "${p.name}" est insuffisant.` });
+      }
 
-      total += p.price * item.quantity;
-      itemsWithPrice.push({ ...item, price: p.price });
+      // Vérification des stocks et calcul du total
+      for (let item of items) {
+        const product = await client.query("SELECT * FROM products WHERE id = $1", [item.product_id]);
 
-      // Mise à jour du stock
-      await client.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [item.quantity, item.product_id]);
-    }
+        if (product.rows.length === 0) throw new Error(`Produit ${item.product_id} introuvable`);
+        
+        const p = product.rows[0];
+        if (p.stock < item.quantity) throw new Error(`Stock insuffisant pour ${p.name}`);
 
-    // 2. Création de la commande avec la colonne DELIVERY (JSON)
-    const orderResult = await client.query(
-      "INSERT INTO orders (user_id, total, delivery) VALUES ($1, $2, $3) RETURNING *",
-      [userId, total, JSON.stringify(delivery)] 
-    );
-    const orderId = orderResult.rows[0].id;
+        total += p.price * item.quantity;
+        itemsWithPrice.push({ ...item, price: p.price });
 
-    // 3. Insertion des articles
-    for (let item of itemsWithPrice) {
-      await client.query(
-        "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)",
-        [orderId, item.product_id, item.quantity, item.price]
+        // Mise à jour du stock
+        await client.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [item.quantity, item.product_id]);
+      }
+
+      // 2. Création de la commande avec la colonne DELIVERY (JSON)
+      const orderResult = await client.query(
+        "INSERT INTO orders (user_id, total, delivery) VALUES ($1, $2, $3) RETURNING *",
+        [userId, total, JSON.stringify(delivery)] 
       );
+      const orderId = orderResult.rows[0].id;
+
+      // 3. Insertion des articles
+      for (let item of itemsWithPrice) {
+        await client.query(
+          "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)",
+          [orderId, item.product_id, item.quantity, item.price]
+        );
+      }
     }
 
     await client.query("COMMIT");
