@@ -41,9 +41,9 @@ export const createOrder = async (req, res) => {
     // --- MODIFICATION ICI : INSERTION DANS LES COLONNES INDIVIDUELLES ---
     const orderResult = await client.query(
       `INSERT INTO orders 
-       (user_id, total, name, phone, email, address, delivery_date, delivery_time) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-       RETURNING id`,
+      (user_id, total, customer_name, phone, customer_email, address, delivery_date, delivery_time) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+      RETURNING id`,
       [userId, total, name, phone, email, address, delivery_date, delivery_time] 
     );
     
