@@ -86,22 +86,18 @@ function Cart() {
 
   // FONCTION UNIQUE POUR PASSER COMMANDE
     const handleCheckout = () => {
-    const token = localStorage.getItem("token");
+    // 1. Définition des règles de contrôle
+    const validateData = (data) => {
+      const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
+      const phoneRegex = /^(032|033|034|037|038)\d{7}$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!token) {
-      Swal.fire({
-        icon: "error",
-        title: "Connexion requise",
-        text: "Veuillez vous connecter pour passer commande.",
-        confirmButtonColor: "#0f172a"
-      }).then(() => navigate("/auth"));
-      return;
-    }
-
-    if (cart.length === 0) {
-      Swal.fire({ icon: "info", title: "Panier vide", text: "Ajoutez des produits avant de commander." });
-      return;
-    }
+      if (!nameRegex.test(data.name)) return "Le nom ne doit contenir que des lettres.";
+      if (!phoneRegex.test(data.phone)) return "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38).";
+      if (!emailRegex.test(data.email)) return "Format d'email invalide.";
+      if (!data.address || !data.date || !data.time) return "Veuillez remplir tous les champs de livraison.";
+      return null;
+    };
 
     Swal.fire({
       title: 'Détails de la livraison 🚚',
@@ -109,12 +105,12 @@ function Cart() {
         <div class="flex flex-col gap-3 text-left">
           <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
           <div>
-            <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
+            <label class="text-xs font-bold text-gray-400">NOM COMPLET</label>
             <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" placeholder="Ex: Jean Dupont">
           </div>
           <div class="flex gap-2">
             <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
+              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE</label>
               <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034 XX XXX XX">
             </div>
             <div class="w-1/2">
@@ -142,42 +138,33 @@ function Cart() {
       confirmButtonText: 'Confirmer la commande',
       cancelButtonText: 'Annuler',
       confirmButtonColor: '#0f172a',
+      // CURSEUR MAIN FORCÉ
+      didOpen: () => {
+        const confirmBtn = Swal.getConfirmButton();
+        const cancelBtn = Swal.getCancelButton();
+        if (confirmBtn) confirmBtn.style.cursor = 'pointer';
+        if (cancelBtn) cancelBtn.style.cursor = 'pointer';
+      },
       preConfirm: () => {
-        const name = document.getElementById('swal-name').value.trim();
-        const phone = document.getElementById('swal-phone').value.trim();
-        const email = document.getElementById('swal-email').value.trim();
-        const address = document.getElementById('swal-address').value.trim();
-        const date = document.getElementById('swal-date').value;
-        const time = document.getElementById('swal-time').value;
+        const data = {
+          name: document.getElementById('swal-name').value.trim(),
+          phone: document.getElementById('swal-phone').value.trim(),
+          email: document.getElementById('swal-email').value.trim(),
+          address: document.getElementById('swal-address').value.trim(),
+          date: document.getElementById('swal-date').value,
+          time: document.getElementById('swal-time').value
+        };
 
-        // 1. Validation Nom (Pas de chiffres ni caractères spéciaux)
-        const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
-        if (!name || !nameRegex.test(name)) {
-          Swal.showValidationMessage(`Nom invalide : utilisez uniquement des lettres`);
-          return false;
+        const errorMessage = validateData(data);
+
+        if (errorMessage) {
+          // Affiche la MessageBox d'erreur par-dessus la modale (comme ton Login)
+          Swal.showValidationMessage(errorMessage); 
+          
+          // Focus automatique sur le champ (simulé par SweetAlert2)
+          return false; 
         }
-
-        // 2. Validation Téléphone (10 chiffres, commence par 032, 033, 034, 037, 038)
-        const phoneRegex = /^(032|033|034|037|038)\d{7}$/;
-        if (!phoneRegex.test(phone)) {
-          Swal.showValidationMessage(`Téléphone invalide : 10 chiffres commençant par 032/33/34/37/38`);
-          return false;
-        }
-
-        // 3. Validation Email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email)) {
-          Swal.showValidationMessage(`Adresse email invalide`);
-          return false;
-        }
-
-        // 4. Validation reste des champs
-        if (!address || !date || !time) {
-          Swal.showValidationMessage(`Veuillez remplir l'adresse, la date et l'heure`);
-          return false;
-        }
-
-        return { name, phone, email, address, date, time };
+        return data;
       }
     }).then((result) => {
       if (result.isConfirmed) {
