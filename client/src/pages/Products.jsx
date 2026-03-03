@@ -111,8 +111,9 @@ function Products() {
                 </span>
               </div>
               <div className="text-xl font-black text-slate-900 mb-4 px-1">{Number(product.price).toLocaleString()} Ar</div>
-              <div className="text-xl font-black text-slate-900 mb-4 px-1">{Number(product.description).toLocaleString()} Ar</div>
-              
+              <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+                {product.description || "Aucune description disponible pour cette pièce signature."}
+              </p>
               <button 
                 onClick={() => addToCart(product)} 
                 className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
