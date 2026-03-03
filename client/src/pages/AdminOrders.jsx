@@ -123,10 +123,10 @@ function AdminOrders() {
             
             <!-- AJOUT DU TÉLÉPHONE ET DE L'ADRESSE -->
             <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Lieu de livraison :</strong> ${order.address || 'Non renseignée'}</p>
             
             <!-- AJOUT DE LA DATE ET HEURE -->
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Date :</strong> ${orderDate}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Date de livraison :</strong> ${orderDate}</p>
 
             <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; pt-2">
               TOTAL : ${Number(order.total).toLocaleString()} Ar
