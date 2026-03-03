@@ -15,6 +15,8 @@ import { Link } from "react-router-dom";
 function Cart() {
   const [cart, setCart] = useState([]);
 
+  const user = JSON.parse(localStorage.getItem("user")) || {}; 
+
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(storedCart);
