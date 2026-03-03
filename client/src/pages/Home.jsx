@@ -129,6 +129,9 @@ function Home() {
                 <h3 className="font-semibold text-slate-800 text-lg group-hover:text-[#ada194] transition-colors">
                   {product.name}
                 </h3>
+                <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+                  {product.description || "Aucune description disponible pour cette pièce signature."}
+                </p>
                 <p className="text-[#ada194] font-extrabold mt-2 text-xl">
                   {Number(product.price).toLocaleString()} Ar
                 </p>
