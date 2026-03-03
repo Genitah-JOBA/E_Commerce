@@ -20,7 +20,7 @@ function Home() {
     // MESSAGE DE BIENVENUE (MessageBox)
     if (isLoggedIn) {
         Swal.fire({
-          title: `Ravi de vous revoir, ${displayName} ! 👋`,
+          title: `Ravi de vous revoir, ${user.name || user.username || (user.user && user.user.name)} ! 👋`,
           text: "Prêt à découvrir nos nouvelles pépites pour votre intérieur ?",
           icon: 'success',
           toast: true,
