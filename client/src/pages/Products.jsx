@@ -53,18 +53,22 @@ function Products() {
   };
 
   const addToCart = (product) => {
-    if (product.stock <= 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Rupture de stock',
-        text: 'Désolé, ce produit n\'est plus disponible.',
-        confirmButtonColor: '#ada194'
-      });
-      return;
-    }
-
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingProduct = cart.find(item => item.id === product.id);
+    const currentQuantity = existingProduct ? existingProduct.quantity : 0;
+
+    // Vérifie si on dépasse le stock disponible
+    if (product.stock <= 0 || currentQuantity >= product.stock) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Limite atteinte',
+        text: currentQuantity >= product.stock 
+          ? `Désolé, nous n'avons que ${product.stock} exemplaire(s) en stock.`
+          : 'Ce produit est en rupture de stock.',
+        confirmButtonColor: '#ada194'
+      });
+      return false; // On retourne false pour savoir si l'ajout a échoué
+    }
 
     if (existingProduct) {
       existingProduct.quantity += 1;
@@ -74,6 +78,7 @@ function Products() {
 
     localStorage.setItem("cart", JSON.stringify(cart));
     showToast(product.name);
+    return true; // Succès
   };
 
   if (loading) {
@@ -177,25 +182,36 @@ function Products() {
 
               <div className="mt-auto pt-6">
                 <button 
+                  disabled={selectedProduct.stock <= 0}
                   onClick={() => { 
-                    addToCart(selectedProduct); 
-                    setSelectedProduct(null); 
-                    Swal.fire({
-                        title: 'Produit ajouté !',
-                        text: "Souhaitez-vous finaliser votre commande ?",
-                        icon: 'success',
-                        showCancelButton: true,
-                        confirmButtonText: 'Voir le panier',
-                        cancelButtonText: 'Boutique',
-                        confirmButtonColor: '#0f172a',
-                        cancelButtonColor: '#ada194'
-                    }).then((result) => {
-                        if (result.isConfirmed) window.location.href = "/cart";
-                    });
+                    // On n'exécute la suite que si l'ajout est réussi
+                    const success = addToCart(selectedProduct); 
+                    
+                    if (success) {
+                      setSelectedProduct(null); 
+                      Swal.fire({
+                          title: 'Produit ajouté !',
+                          text: "Souhaitez-vous finaliser votre commande ?",
+                          icon: 'success',
+                          showCancelButton: true,
+                          confirmButtonText: 'Voir le panier',
+                          cancelButtonText: 'Boutique',
+                          confirmButtonColor: '#0f172a',
+                          cancelButtonColor: '#ada194'
+                      }).then((result) => {
+                          if (result.isConfirmed) window.location.href = "/cart";
+                      });
+                    }
                   }}
-                  className="w-full bg-black text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                  className={`w-full font-bold py-4 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 ${
+                    selectedProduct.stock > 0 
+                      ? "bg-black text-white hover:bg-slate-800 active:scale-95" 
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
                 >
-                  <ShoppingCart size={20} /> Finaliser l'ajout <ChevronRight size={18} />
+                  <ShoppingCart size={20} /> 
+                  {selectedProduct.stock > 0 ? "Finaliser l'ajout" : "Rupture de stock"}
+                  {selectedProduct.stock > 0 && <ChevronRight size={18} />}
                 </button>
               </div>
             </div>
