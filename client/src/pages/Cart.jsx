@@ -134,6 +134,79 @@ function Cart() {
     }
   };
 
+  const handleCheckout = () => {
+    Swal.fire({
+      title: 'Détails de la livraison 🚚',
+      html: `
+        <div class="flex flex-col gap-3 text-left">
+          <div>
+            <label class="text-xs font-bold text-gray-400">NOM COMPLET</label>
+            <input id="swal-name" class="swal2-input !m-0 !w-full" placeholder="Ex: Jean Dupont">
+          </div>
+          <div class="flex gap-2">
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE</label>
+              <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034 XX XXX XX">
+            </div>
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">EMAIL</label>
+              <input id="swal-email" type="email" class="swal2-input !m-0 !w-full" value="${user.email || ''}">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-gray-400">ADRESSE PRÉCISE</label>
+            <input id="swal-address" class="swal2-input !m-0 !w-full" placeholder="Lot, Quartier, Ville">
+          </div>
+          <div class="flex gap-2">
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">DATE</label>
+              <input id="swal-date" type="date" class="swal2-input !m-0 !w-full">
+            </div>
+            <div class="w-1/2">
+              <label class="text-xs font-bold text-gray-400">HEURE</label>
+              <input id="swal-time" type="time" class="swal2-input !m-0 !w-full">
+            </div>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Confirmer la commande',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: '#0f172a',
+      focusConfirm: false,
+      preConfirm: () => {
+        // Récupération des valeurs
+        const name = document.getElementById('swal-name').value;
+        const phone = document.getElementById('swal-phone').value;
+        const email = document.getElementById('swal-email').value;
+        const address = document.getElementById('swal-address').value;
+        const date = document.getElementById('swal-date').value;
+        const time = document.getElementById('swal-time').value;
+
+        // Contrôle de champ interne
+        if (!name || !phone || !address || !date || !time) {
+          Swal.showValidationMessage(`Veuillez remplir tous les champs obligatoires`);
+          return false;
+        }
+        return { name, phone, email, address, date, time };
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Ici vous appelez votre API pour enregistrer la commande
+        sendOrderToDatabase(result.value);
+      }
+    });
+  };
+
+  const sendOrderToDatabase = async (deliveryData) => {
+      try {
+          // Logique d'envoi à votre backend /api/orders
+          Swal.fire('Succès !', 'Votre commande a été enregistrée.', 'success');
+      } catch (err) {
+          Swal.fire('Erreur', 'Impossible de valider la commande.', 'error');
+      }
+  }
+
   return (
     <div className="bg-white min-h-screen p-6 md:p-12">
       <div className="max-w-4xl mx-auto">
@@ -200,7 +273,7 @@ function Cart() {
               </div>
               
               <button
-                onClick={handleOrder}
+                onClick={handleCheckout} 
                 className="mt-6 md:mt-0 w-full md:w-auto bg-[#ada194] hover:bg-white hover:text-[#ada194] text-white px-10 py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-3 shadow-lg active:scale-95"
               >
                 <CreditCard size={20} /> PASSER COMMANDE
