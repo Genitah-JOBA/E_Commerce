@@ -53,6 +53,16 @@ function Products() {
   };
 
   const addToCart = (product) => {
+    if (product.stock <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Rupture de stock',
+        text: 'Désolé, ce produit n\'est plus disponible.',
+        confirmButtonColor: '#ada194'
+      });
+      return;
+    }
+
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingProduct = cart.find(item => item.id === product.id);
 
@@ -115,10 +125,12 @@ function Products() {
                 {product.description || "Aucune description disponible pour cette pièce signature."}
               </p>
               <button 
-                onClick={() => addToCart(product)} 
+                onClick={() => addToCart(product)}
+                disabled={product.stock <= 0}
                 className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-all active:scale-95 shadow-md flex items-center justify-center gap-2"
               >
-                <ShoppingCart size={18} /> Ajouter au panier
+                <ShoppingCart size={18} />
+                {product.stock > 0 ? "Ajouter au panier" : "Indisponible"}
               </button>
             </div>
           ))}
