@@ -77,6 +77,7 @@ function Cart() {
     return;
   }
 
+  // 1. On récupère la date du jour au format YYYY-MM-DD
   const today = new Date().toISOString().split('T')[0];
 
   Swal.fire({
@@ -103,8 +104,15 @@ function Cart() {
           <input id="swal-address" class="swal2-input !m-0 !w-full" style="cursor:text">
         </div>
         <div class="flex gap-2">
-          <div class="w-1/2"><label class="text-xs font-bold text-gray-400">DATE</label><input id="swal-date" type="date" class="swal2-input !m-0 !w-full"></div>
-          <div class="w-1/2"><label class="text-xs font-bold text-gray-400">HEURE</label><input id="swal-time" type="time" class="swal2-input !m-0 !w-full"></div>
+          <div class="w-1/2">
+            <label class="text-xs font-bold text-gray-400">DATE</label>
+            <!-- AJOUT : min="${today}" pour griser les dates passées dans le calendrier -->
+            <input id="swal-date" type="date" min="${today}" class="swal2-input !m-0 !w-full">
+          </div>
+          <div class="w-1/2">
+            <label class="text-xs font-bold text-gray-400">HEURE</label>
+            <input id="swal-time" type="time" class="swal2-input !m-0 !w-full">
+          </div>
         </div>
       </div>
     `,
@@ -112,41 +120,22 @@ function Cart() {
     confirmButtonText: 'Confirmer',
     confirmButtonColor: '#0f172a',
     didOpen: () => {
-      // Force le curseur main sur les boutons
       Swal.getConfirmButton().style.cursor = 'pointer';
       Swal.getCancelButton().style.cursor = 'pointer';
 
       const nameInp = document.getElementById('swal-name');
       const phoneInp = document.getElementById('swal-phone');
 
-      // 1. BLOCAGE NOM : Supprime instantanément tout ce qui n'est pas une lettre
       nameInp.addEventListener('input', (e) => {
         const start = e.target.selectionStart;
         e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
         e.target.setSelectionRange(start, start);
       });
 
-      if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
-        Swal.showValidationMessage(`Tous les champs sont obligatoires`);
-        return false;
-      }
-
-      // --- CONTRÔLE DATE PASSÉE (SÉCURITÉ) ---
-      const selectedDate = new Date(data.date);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
-
-      if (selectedDate < currentDate) {
-        Swal.showValidationMessage(`La date de livraison ne peut pas être dans le passé`);
-        return false;
-      }
-
-      // 2. BLOCAGE TÉLÉPHONE : Supprime tout ce qui n'est pas un chiffre
       phoneInp.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, "");
       });
 
-      // 3. FOCUS TRAP (Message Box si invalide en quittant le champ)
       const inputs = {
         name: { el: nameInp, reg: /^[a-zA-ZÀ-ÿ\s'-]+$/, msg: "Le nom ne doit contenir que des lettres." },
         phone: { el: phoneInp, reg: /^(032|033|034|037|038)\d{7}$/, msg: "Téléphone invalide (10 chiffres commençant par 032/33/34/37/38)." }
@@ -156,13 +145,7 @@ function Cart() {
         item.el.addEventListener('focusout', async function() {
           const val = this.value.trim();
           if (val !== "" && !item.reg.test(val)) {
-            await Swal.fire({
-              title: "Saisie incorrecte",
-              text: item.msg,
-              icon: "error",
-              confirmButtonText: "Corriger",
-              confirmButtonColor: "#0f172a"
-            });
+            await Swal.fire({ title: "Saisie incorrecte", text: item.msg, icon: "error", confirmButtonText: "Corriger", confirmButtonColor: "#0f172a" });
             setTimeout(() => item.el.focus(), 10);
           }
         });
@@ -178,21 +161,35 @@ function Cart() {
         time: document.getElementById('swal-time').value
       };
 
+      // 1. Vérification champs obligatoires
       if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
         Swal.showValidationMessage(`Tous les champs sont obligatoires`);
         return false;
       }
-      // Validation finale du téléphone avant envoi
+
+      // 2. BLOCAGE DATE PASSÉE (Sécurité serveur/logique)
+      const selectedDate = new Date(data.date);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0); // On compare uniquement les jours
+
+      if (selectedDate < currentDate) {
+        Swal.showValidationMessage(`La date ne peut pas être dans le passé (2005 interdit)`);
+        return false;
+      }
+
+      // 3. Validation téléphone
       if (!/^(032|033|034|037|038)\d{7}$/.test(data.phone)) {
         Swal.showValidationMessage(`Préfixe téléphone invalide (032/33/34/37/38)`);
         return false;
       }
+
       return data;
     }
   }).then((result) => {
     if (result.isConfirmed) sendOrderToDatabase(result.value);
   });
 };
+
 
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
