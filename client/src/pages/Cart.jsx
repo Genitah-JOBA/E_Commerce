@@ -12,11 +12,16 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import API from "../api"; // adapte selon ton import
+
 function Cart() {
   const [cart, setCart] = useState([]);
   const navigate = useNavigate();
 
-  // Récupération de l'utilisateur pour pré-remplir les champs
+  // Récupération de l'utilisateur
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : {};
 
@@ -72,7 +77,7 @@ function Cart() {
     0
   );
 
-  // 🛒 Fonction principale pour le checkout
+  // 🛒 Checkout
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -80,20 +85,22 @@ function Cart() {
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     Swal.fire({
-      title: 'Détails de la livraison',
+      title: "Détails de la livraison",
       html: `
         <div class="flex flex-col gap-3 text-left">
-          <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">Total : ${total.toLocaleString()} Ar</div>
+          <div class="bg-gray-100 p-2 rounded text-center font-bold mb-2">
+            Total : ${total.toLocaleString()} Ar
+          </div>
           <div>
-            <label class="text-xs font-bold text-gray-400">NOM COMPLET (Lettres uniquement)</label>
+            <label class="text-xs font-bold text-gray-400">NOM COMPLET</label>
             <input id="swal-name" class="swal2-input !m-0 !w-full" value="${user.username || user.name || ''}" style="cursor:text">
           </div>
           <div class="flex gap-2">
             <div class="w-1/2">
-              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE (10 chiffres)</label>
+              <label class="text-xs font-bold text-gray-400">TÉLÉPHONE</label>
               <input id="swal-phone" class="swal2-input !m-0 !w-full" placeholder="034XXXXXXX" maxlength="10" style="cursor:text">
             </div>
             <div class="w-1/2">
@@ -118,20 +125,19 @@ function Cart() {
         </div>
       `,
       showCancelButton: true,
-      confirmButtonText: 'Confirmer',
-      confirmButtonColor: '#0f172a',
+      confirmButtonText: "Confirmer",
+      confirmButtonColor: "#0f172a",
       didOpen: () => {
-        const nameInp = document.getElementById('swal-name');
-        const phoneInp = document.getElementById('swal-phone');
+        const nameInp = document.getElementById("swal-name");
+        const phoneInp = document.getElementById("swal-phone");
 
-        // Validation en direct
-        nameInp.addEventListener('input', (e) => {
+        nameInp.addEventListener("input", (e) => {
           const start = e.target.selectionStart;
           e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
           e.target.setSelectionRange(start, start);
         });
 
-        phoneInp.addEventListener('input', (e) => {
+        phoneInp.addEventListener("input", (e) => {
           e.target.value = e.target.value.replace(/\D/g, "");
         });
 
@@ -141,7 +147,7 @@ function Cart() {
         };
 
         Object.values(inputs).forEach(item => {
-          item.el.addEventListener('focusout', async function() {
+          item.el.addEventListener("focusout", async function () {
             const val = this.value.trim();
             if (val !== "" && !item.reg.test(val)) {
               await Swal.fire({ title: "Saisie incorrecte", text: item.msg, icon: "error", confirmButtonText: "Corriger", confirmButtonColor: "#0f172a" });
@@ -152,12 +158,12 @@ function Cart() {
       },
       preConfirm: () => {
         const data = {
-          name: document.getElementById('swal-name').value.trim(),
-          phone: document.getElementById('swal-phone').value.trim(),
-          email: document.getElementById('swal-email').value.trim(),
-          address: document.getElementById('swal-address').value.trim(),
-          date: document.getElementById('swal-date').value,
-          time: document.getElementById('swal-time').value
+          name: document.getElementById("swal-name").value.trim(),
+          phone: document.getElementById("swal-phone").value.trim(),
+          email: document.getElementById("swal-email").value.trim(),
+          address: document.getElementById("swal-address").value.trim(),
+          date: document.getElementById("swal-date").value,
+          time: document.getElementById("swal-time").value
         };
 
         if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
@@ -168,7 +174,6 @@ function Cart() {
         const selectedDate = new Date(data.date);
         const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
-
         if (selectedDate < currentDate) {
           Swal.showValidationMessage("La date ne peut pas être dans le passé");
           return false;
@@ -186,7 +191,6 @@ function Cart() {
     });
   };
 
-  // 🔒 Envoi des données au backend
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
 
@@ -210,20 +214,19 @@ function Cart() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Swal.fire({ 
-        icon: 'success',
-        title: 'Commande validée !',
-        text: 'Merci pour votre confiance.',
-        confirmButtonColor: '#0f172a'
+      Swal.fire({
+        icon: "success",
+        title: "Commande validée !",
+        text: "Merci pour votre confiance.",
+        confirmButtonColor: "#0f172a"
       });
 
       localStorage.removeItem("cart");
       setCart([]);
     } catch (err) {
-      Swal.fire('Erreur', err.response?.data?.message || 'Erreur lors de la commande', 'error');
+      Swal.fire("Erreur", err.response?.data?.message || "Erreur lors de la commande", "error");
     }
   };
-}
 
   return (
     <div className="bg-white min-h-screen p-6 md:p-12">
