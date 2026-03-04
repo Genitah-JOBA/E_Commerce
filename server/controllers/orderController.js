@@ -136,3 +136,30 @@ export const getMyOrders = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// --- ALL ORDERS (Admin) ---
+export const getAllOrders = async (req, res) => {
+  try {
+    // IMPORTANT: We must explicitly select the new columns here!
+    const query = `
+      SELECT 
+        id, 
+        total, 
+        status, 
+        created_at, 
+        customer_name, 
+        customer_email, 
+        phone, 
+        address, 
+        delivery_date, 
+        delivery_time 
+      FROM orders 
+      ORDER BY created_at DESC
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error getAllOrders:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+};
