@@ -202,20 +202,21 @@ function Cart() {
     try {
       // ON ENVOIE LES DONNÉES À PLAT (SANS L'OBJET "delivery")
       await API.post(
-        "/orders",
-        {
-          items: orderItems,  // assure-toi que c'est `orderItems` et pas `items` si tu les as préparés
-          name,
-          phone,
-          email,
-          address,
-          delivery_date,
-          delivery_time
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+  await API.post(
+      "/orders", // 1️⃣ URL
+      {
+        items: orderItems, // 2️⃣ data
+        name,
+        phone,
+        email,
+        address,
+        delivery_date,
+        delivery_time
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` } // 3️⃣ config
+      }
+    );
 
       Swal.fire({ 
         icon: 'success', 
