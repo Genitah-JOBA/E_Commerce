@@ -20,6 +20,7 @@ function AdminOrders() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")) || {};
 
   // 🔒 Admin Protection
   useEffect(() => {
@@ -112,22 +113,14 @@ function AdminOrders() {
       html: `
         <div style="text-align:left; font-family: sans-serif;">
           <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
-            <p style="margin: 0; font-size: 14px; color: #1e293b;">
-              <strong>Client :</strong> ${order.customer_name || 'Inconnu'}
-            </p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
-              <strong>Email :</strong> ${order.customer_email || 'Non renseigné'}
-            </p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
-               <strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}
-            </p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
-               <strong>Adresse :</strong> ${order.address || 'Non renseignée'}
-            </p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
-               <strong>Livraison :</strong> ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '??'} à ${order.delivery_time || '??'}
-            </p>
-            
+            html: `
+            <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
+              <p><strong>Client :</strong> ${order.name || 'Inconnu'}</p>
+              <p><strong>Email :</strong> ${order.email || 'Non renseigné'}</p>
+              <p><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
+              <p><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
+              <p><strong>Livraison :</strong> ${order.delivery_date || '??'} à ${order.delivery_time || '??'}</p>
+            </div>`    
             <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
               TOTAL : ${Number(order.total).toLocaleString()} Ar
             </p>
