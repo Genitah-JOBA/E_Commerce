@@ -142,7 +142,8 @@ export const getAllOrders = async (req, res) => {
     // Vérifie bien que tu as listé TOUTES ces colonnes
     const result = await pool.query(
       `SELECT id, total, status, created_at, 
-              name, email, phone, address, delivery_date, delivery_time 
+              customer_name AS name, customer_email AS email, 
+              phone, address, delivery_date, delivery_time 
        FROM orders 
        ORDER BY created_at DESC`
     );
