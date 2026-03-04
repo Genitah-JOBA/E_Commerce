@@ -74,74 +74,73 @@ function AdminOrders() {
   };
 
   const viewDetails = async (order) => {
-    try {
-      const res = await API.get(`/orders/${order.id}/items`);
+  // AJOUTE CE LOG ICI : On va voir dans la console (F12) 
+  // si les colonnes existent vraiment dans l'objet 'order'
+  console.log("Données de la commande reçue :", order);
 
-      // Préparation de la date lisible
-      const orderDate = order.created_at 
-        ? new Date(order.created_at).toLocaleString('fr-FR', { 
-            dateStyle: 'short', 
-            timeStyle: 'short' 
-          }) 
-        : "Non précisée";
+  try {
+    const res = await API.get(`/orders/${order.id}/items`);
 
-      // Construction du tableau des articles
-      let itemsHTML = `
-        <table style="width:100%; border-collapse: collapse; margin-top: 15px; font-family: sans-serif; text-align: left;">
-          <thead>
-            <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 11px; text-transform: uppercase;">
-              <th style="padding:10px;">Produit</th>
-              <th style="padding:10px; text-align:center;">Qté</th>
-              <th style="padding:10px; text-align:right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      res.data.forEach((item) => {
-        itemsHTML += `
-          <tr style="border-bottom: 1px solid #f8fafc; font-size: 13px;">
-            <td style="padding:10px; font-weight: 600; color: #1e293b;">${item.name}</td>
-            <td style="padding:10px; text-align:center; color: #64748b;">x${item.quantity}</td>
-            <td style="padding:10px; text-align:right; font-weight: 700;">${Number(item.price * item.quantity).toLocaleString()} Ar</td>
+    let itemsHTML = `
+      <table style="width:100%; border-collapse: collapse; margin-top: 15px; font-family: sans-serif; text-align: left;">
+        <thead>
+          <tr style="border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 11px; text-transform: uppercase;">
+            <th style="padding:10px;">Produit</th>
+            <th style="padding:10px; text-align:center;">Qté</th>
+            <th style="padding:10px; text-align:right;">Total</th>
           </tr>
-        `;
-      });
-      itemsHTML += `</tbody></table>`;
+        </thead>
+        <tbody>
+    `;
 
-      // Affichage de la modale avec les nouveaux champs
-      Swal.fire({
-        title: `Détails Commande #${order.id}`,
-        width: 550,
-        confirmButtonColor: "#0f172a",
-        confirmButtonText: "Fermer",
-        html: `
-          <div style="text-align:left; font-family: sans-serif;">
-            // --- DANS TON FRONTEND (viewDetails) ---
-            <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
-              <p style="margin: 0; font-size: 14px; color: #1e293b;">
-                <strong>Client :</strong> ${order.customer_name || order.name || 'Inconnu'}
-              </p>
-              <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
-                <strong>Email :</strong> ${order.customer_email || order.email || 'Non renseigné'}
-              </p>
-              <p><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
-              <p><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
-              <p><strong>Livraison le :</strong> ${order.delivery_date || '??'} à ${order.delivery_time || '??'}</p>
-              
-              <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                TOTAL : ${Number(order.total).toLocaleString()} Ar
-              </p>
-            </div>
-            ${itemsHTML}
+    res.data.forEach((item) => {
+      itemsHTML += `
+        <tr style="border-bottom: 1px solid #f8fafc; font-size: 13px;">
+          <td style="padding:10px; font-weight: 600; color: #1e293b;">${item.name}</td>
+          <td style="padding:10px; text-align:center; color: #64748b;">x${item.quantity}</td>
+          <td style="padding:10px; text-align:right; font-weight: 700;">${Number(item.price * item.quantity).toLocaleString()} Ar</td>
+        </tr>
+      `;
+    });
+    itemsHTML += `</tbody></table>`;
+
+    Swal.fire({
+      title: `Détails Commande #${order.id}`,
+      width: 550,
+      confirmButtonColor: "#0f172a",
+      confirmButtonText: "Fermer",
+      html: `
+        <div style="text-align:left; font-family: sans-serif;">
+          <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
+            <p style="margin: 0; font-size: 14px; color: #1e293b;">
+              <strong>Client :</strong> ${order.customer_name || 'Inconnu'}
+            </p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
+              <strong>Email :</strong> ${order.customer_email || 'Non renseigné'}
+            </p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
+               <strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}
+            </p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
+               <strong>Adresse :</strong> ${order.address || 'Non renseignée'}
+            </p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;">
+               <strong>Livraison :</strong> ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '??'} à ${order.delivery_time || '??'}
+            </p>
+            
+            <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+              TOTAL : ${Number(order.total).toLocaleString()} Ar
+            </p>
           </div>
-        `
-      });
-    } catch (error) {
-      console.error(error);
-      Swal.fire("Erreur", "Impossible de récupérer les détails.", "error");
-    }
-  };
+          ${itemsHTML}
+        </div>
+      `
+    });
+  } catch (error) {
+    console.error(error);
+    Swal.fire("Erreur", "Impossible de récupérer les détails.", "error");
+  }
+};
 
   const getStatusIcon = (status) => {
     switch (status) {
