@@ -21,8 +21,7 @@ router.get("/my-orders", verifyToken, getMyOrders);
 
 
 // --- ROUTES ADMIN ---
-// Voir toutes les commandes
-router.get("/admin", verifyToken, verifyAdmin, authMiddleware, adminMiddleware, getAllOrders);
+router.get("/admin", verifyToken, verifyAdmin, getAllOrders);
 
 // Voir les détails d'une commande spécifique
 router.get("/:id/items", verifyToken, verifyAdmin, getOrderItems);
