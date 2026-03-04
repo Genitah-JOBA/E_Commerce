@@ -85,10 +85,7 @@ function AdminOrders() {
       minute: "2-digit",
     }); 
     
-    const res = await API.get("/orders", {
-      params: { status: filter },
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await API.get(`/orders/${order.id}/items`);
 
     let itemsHTML = `
       <table style="width:100%; border-collapse: collapse; margin-top: 15px; font-family: sans-serif; text-align: left;">

@@ -209,8 +209,8 @@ function Cart() {
         address,
         delivery_date,
         delivery_time
-      } { 
-        headers: { Authorization: `Bearer ${token}` } 
+      },
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       Swal.fire({ 
