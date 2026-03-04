@@ -2,8 +2,9 @@ import pool from "../config/db.js";
 
 // --- CRÉATION DE COMMANDE (Avec infos de livraison) ---
 export const createOrder = async (req, res) => {
-  const client = await pool.connect();
   try {
+    const client = await pool.connect();
+    
     const { 
       items, 
       name, 
