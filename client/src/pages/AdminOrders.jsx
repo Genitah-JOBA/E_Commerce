@@ -21,8 +21,6 @@ function AdminOrders() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  const formattedDate = new Date(order.delivery_date)
-  .toLocaleDateString("fr-FR");
 
   // 🔒 Admin Protection
   useEffect(() => {
@@ -80,6 +78,13 @@ function AdminOrders() {
   console.log("Données de la commande reçue :", order);
 
   try {
+    const deliveryDate = new Date(order.delivery_date);
+    const formattedDate = deliveryDate.toLocaleDateString("fr-FR"); // dd/mm/yyyy
+    const formattedTime = deliveryDate.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }); 
+    
     const res = await API.get(`/orders/${order.id}/items`);
 
     let itemsHTML = `
