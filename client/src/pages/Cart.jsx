@@ -30,6 +30,7 @@ function Cart() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
+  // 🔹 Gestion du panier
   const increaseQty = (index) => {
     const updatedCart = [...cart];
     updatedCart[index].quantity += 1;
@@ -65,11 +66,13 @@ function Cart() {
     });
   };
 
+  // 🔹 Calcul du total
   const total = cart.reduce(
     (sum, item) => sum + Number(item.price) * item.quantity,
     0
   );
 
+  // 🛒 Fonction principale pour le checkout
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -77,7 +80,6 @@ function Cart() {
       return;
     }
 
-    // 1. On récupère la date du jour au format YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
 
     Swal.fire({
@@ -106,7 +108,6 @@ function Cart() {
           <div class="flex gap-2">
             <div class="w-1/2">
               <label class="text-xs font-bold text-gray-400">DATE</label>
-              <!-- AJOUT : min="${today}" pour griser les dates passées dans le calendrier -->
               <input id="swal-date" type="date" min="${today}" class="swal2-input !m-0 !w-full">
             </div>
             <div class="w-1/2">
@@ -120,12 +121,10 @@ function Cart() {
       confirmButtonText: 'Confirmer',
       confirmButtonColor: '#0f172a',
       didOpen: () => {
-        Swal.getConfirmButton().style.cursor = 'pointer';
-        Swal.getCancelButton().style.cursor = 'pointer';
-
         const nameInp = document.getElementById('swal-name');
         const phoneInp = document.getElementById('swal-phone');
 
+        // Validation en direct
         nameInp.addEventListener('input', (e) => {
           const start = e.target.selectionStart;
           e.target.value = e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "");
@@ -161,25 +160,22 @@ function Cart() {
           time: document.getElementById('swal-time').value
         };
 
-        // 1. Vérification champs obligatoires
         if (!data.name || !data.phone || !data.address || !data.date || !data.time) {
-          Swal.showValidationMessage(`Tous les champs sont obligatoires`);
+          Swal.showValidationMessage("Tous les champs sont obligatoires");
           return false;
         }
 
-        // 2. BLOCAGE DATE PASSÉE (Sécurité serveur/logique)
         const selectedDate = new Date(data.date);
         const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0); // On compare uniquement les jours
+        currentDate.setHours(0, 0, 0, 0);
 
         if (selectedDate < currentDate) {
-          Swal.showValidationMessage(`La date ne peut pas être dans le passé (2005 interdit)`);
+          Swal.showValidationMessage("La date ne peut pas être dans le passé");
           return false;
         }
 
-        // 3. Validation téléphone
         if (!/^(032|033|034|037|038)\d{7}$/.test(data.phone)) {
-          Swal.showValidationMessage(`Préfixe téléphone invalide (032/33/34/37/38)`);
+          Swal.showValidationMessage("Téléphone invalide (032/33/34/37/38)");
           return false;
         }
 
@@ -190,6 +186,7 @@ function Cart() {
     });
   };
 
+  // 🔒 Envoi des données au backend
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
 
@@ -200,7 +197,7 @@ function Cart() {
 
     try {
       await API.post(
-        "/orders", // URL
+        "/orders",
         {
           items: orderItems,
           name: deliveryData.name,
@@ -210,9 +207,7 @@ function Cart() {
           delivery_date: deliveryData.date,
           delivery_time: deliveryData.time
         },
-        {
-          headers: { Authorization: `Bearer ${token}` } // config
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       Swal.fire({ 
@@ -228,6 +223,7 @@ function Cart() {
       Swal.fire('Erreur', err.response?.data?.message || 'Erreur lors de la commande', 'error');
     }
   };
+}
 
   return (
     <div className="bg-white min-h-screen p-6 md:p-12">
