@@ -192,7 +192,7 @@ function Cart() {
 
   const sendOrderToDatabase = async (deliveryData) => {
     const token = localStorage.getItem("token");
-    
+
     // Préparation des articles
     const orderItems = cart.map(item => ({ 
       product_id: item.id, 
@@ -200,23 +200,21 @@ function Cart() {
     }));
 
     try {
-      // ON ENVOIE LES DONNÉES À PLAT (SANS L'OBJET "delivery")
       await API.post(
-  await API.post(
-      "/orders", // 1️⃣ URL
-      {
-        items: orderItems, // 2️⃣ data
-        name,
-        phone,
-        email,
-        address,
-        delivery_date,
-        delivery_time
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` } // 3️⃣ config
-      }
-    );
+        "/orders", // URL
+        {
+          items: orderItems, // data
+          name: deliveryData.name,
+          phone: deliveryData.phone,
+          email: deliveryData.email,
+          address: deliveryData.address,
+          delivery_date: deliveryData.date,
+          delivery_time: deliveryData.time
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` } // config
+        }
+      );
 
       Swal.fire({ 
         icon: 'success', 
