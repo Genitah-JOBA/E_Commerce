@@ -21,6 +21,8 @@ function AdminOrders() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
+  const formattedDate = new Date(order.delivery_date)
+  .toLocaleDateString("fr-FR");
 
   // 🔒 Admin Protection
   useEffect(() => {
