@@ -201,15 +201,15 @@ function Cart() {
 
     try {
       // ON ENVOIE LES DONNÉES À PLAT (SANS L'OBJET "delivery")
-      await API.post("/orders", { 
-        items: orderItems, 
-        name: deliveryData.name,
-        phone: deliveryData.phone,
-        email: deliveryData.email,
-        address: deliveryData.address,
-        delivery_date: deliveryData.date, // Assure-toi que ton backend attend ce nom
-        delivery_time: deliveryData.time  // Assure-toi que ton backend attend ce nom
-      }, { 
+      await API.post("/orders", {
+        items,
+        name,
+        phone,
+        email,
+        address,
+        delivery_date,
+        delivery_time
+      } { 
         headers: { Authorization: `Bearer ${token}` } 
       });
 

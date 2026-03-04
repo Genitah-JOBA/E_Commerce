@@ -36,6 +36,7 @@ export const createOrder = async (req, res) => {
       itemsWithPrice.push({ ...item, price: p.price });
 
       await client.query("UPDATE products SET stock = stock - $1 WHERE id = $2", [item.quantity, item.product_id]);
+      console.log("BODY RECU :", req.body);
     }
 
     // --- MODIFICATION ICI : INSERTION DANS LES COLONNES INDIVIDUELLES ---
@@ -127,7 +128,7 @@ export const getMyOrders = async (req, res) => {
         acc.push(order);
       }
       if (row.product_name) {
-        order.items.push({ name: row.product_name, quantity: row.quantity, price: row.price });
+        order.items.push({ name: row.product_name, quantity: row.quantity, price: row.item_price });
       }
       return acc;
     }, []);
