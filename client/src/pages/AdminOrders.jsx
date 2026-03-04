@@ -75,8 +75,6 @@ function AdminOrders() {
   };
 
   const viewDetails = async (order) => {
-  // AJOUTE CE LOG ICI : On va voir dans la console (F12) 
-  // si les colonnes existent vraiment dans l'objet 'order'
   console.log("Données de la commande reçue :", order);
 
   try {
@@ -113,14 +111,12 @@ function AdminOrders() {
       html: `
         <div style="text-align:left; font-family: sans-serif;">
           <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
-            html: `
-            <div style="background: #f8fafc; padding: 15px; border-radius: 12px;">
-              <p><strong>Client :</strong> ${order.name || 'Inconnu'}</p>
-              <p><strong>Email :</strong> ${order.email || 'Non renseigné'}</p>
-              <p><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
-              <p><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
-              <p><strong>Livraison :</strong> ${order.delivery_date || '??'} à ${order.delivery_time || '??'}</p>
-            </div>`    
+            <p style="margin: 0; font-size: 14px; color: #1e293b;"><strong>Client :</strong> ${order.name || 'Inconnu'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Email :</strong> ${order.email || 'Non renseigné'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Livraison :</strong> ${order.delivery_date || '??'} à ${order.delivery_time || '??'}</p>
+            
             <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
               TOTAL : ${Number(order.total).toLocaleString()} Ar
             </p>
