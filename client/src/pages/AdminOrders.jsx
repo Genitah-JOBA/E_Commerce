@@ -20,11 +20,16 @@ function AdminOrders() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (e) {
+    user = null;
+  }
 
   // 🔒 Admin Protection
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
     if (!user || user.role !== "admin") {
       Swal.fire({ 
         icon: "error", 
