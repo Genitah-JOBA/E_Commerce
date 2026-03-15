@@ -144,9 +144,9 @@ const Navbar = () => {
               {/* Liens mobiles avec cursor-pointer */}
               {!isAdmin && <Link to="/" onClick={toggleMenu} className={linkClass}>Accueil</Link>}
               
-              {user ? (
+              {currentUser ? (
                 <>
-                  <span className="italic px-2">{user.name || "Aura Client"}</span>
+                  <span className="italic px-2">{currentUser.name || "Aura Client"}</span>
                   <button 
                     onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"
