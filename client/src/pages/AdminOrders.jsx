@@ -79,11 +79,13 @@ function AdminOrders() {
 
   try {
     const deliveryDate = new Date(order.delivery_date);
-    const formattedDate = deliveryDate.toLocaleDateString("fr-FR"); // dd/mm/yyyy
-    const formattedTime = deliveryDate.toLocaleTimeString("fr-FR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }); 
+      const formattedDelivery = deliveryDate.toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
     
     const res = await API.get(`/orders/${order.id}/items`);
 
@@ -122,7 +124,7 @@ function AdminOrders() {
             <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Email :</strong> ${order.email || 'Non renseigné'}</p>
             <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Téléphone :</strong> ${order.phone || 'Non renseigné'}</p>
             <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Adresse :</strong> ${order.address || 'Non renseignée'}</p>
-            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Livraison :</strong> ${order.delivery_date || '??'} à ${order.delivery_time || '??'}</p>
+            <p style="margin: 4px 0; font-size: 14px; color: #64748b;"><strong>Livraison :</strong> ${formattedDelivery}</p>
             
             <p style="margin: 12px 0 0 0; font-size: 18px; color: #ada194; font-weight: 800; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
               TOTAL : ${Number(order.total).toLocaleString()} Ar
