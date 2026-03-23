@@ -15,10 +15,8 @@ const Navbar = () => {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      console.log("User data from localStorage:", userData); // Ajoutez ce log
-      setCurrentUser(userData);
-      }
+      setCurrentUser(JSON.parse(storedUser));
+    }
   }, []);
 
   const isAdmin = currentUser && currentUser.role === "admin";
@@ -112,7 +110,7 @@ const Navbar = () => {
           {currentUser ? (
             <div className="flex items-center gap-4">
               <span className="italic font-medium text-sm text-black">
-                {currentUser?.username || currentUser?.name || "Aura Client"}
+                {currentUser.username || currentUser.name || "Aura Client"}
               </span>
               <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md cursor-pointer">
                 <LogOut size={16} /> Déconnexion
@@ -148,7 +146,7 @@ const Navbar = () => {
               
               {currentUser ? (
                 <>
-                  <span className="italic px-2">{currentUser.username || "Aura Client"}</span>
+                  <span className="italic px-2">{currentUser.name || "Aura Client"}</span>
                   <button 
                     onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"

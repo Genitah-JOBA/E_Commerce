@@ -2,35 +2,51 @@ import { useEffect, useState } from "react";
 import API from "../api/axios";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import Swal from "sweetalert2"; // Ajout de SweetAlert2
-// Import des icônes Lucide
+import Swal from "sweetalert2";
 import { Truck, ShieldCheck, Star, Headset, ArrowRight } from "lucide-react";
 
 function Home() {
   const [products, setProducts] = useState([]);
+  const [user, setUser] = useState(null); // Utiliser un state au lieu d'une variable directe
   const navigate = useNavigate();
 
-  // Détection de l'état de connexion
-  const user = JSON.parse(localStorage.getItem("user"));
-  const isLoggedIn = !!user;
-
   useEffect(() => {
+    // Récupérer l'utilisateur de manière sécurisée
+    const getUserFromStorage = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          return parsedUser;
+        }
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        localStorage.removeItem("user");
+      }
+      return null;
+    };
+
+    const currentUser = getUserFromStorage();
+    const isLoggedIn = !!currentUser;
+
     fetchProducts();
 
     // MESSAGE DE BIENVENUE (MessageBox)
-    if (isLoggedIn) {
-        Swal.fire({
-          title: `Ravi de vous revoir, ${user.name || user.username || (user.user && user.user.name)} ! 👋`,
-          text: "Prêt à découvrir nos nouvelles pépites pour votre intérieur ?",
-          icon: 'success',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 4000,
-          timerProgressBar: true,
-        });
+    if (isLoggedIn && currentUser) {
+      const userName = currentUser.username || currentUser.name || "Aura Client";
+      Swal.fire({
+        title: `Ravi de vous revoir, ${userName} ! 👋`,
+        text: "Prêt à découvrir nos nouvelles pépites pour votre intérieur ?",
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+      });
     }
-  }, []);
+  }, []); // Le tableau vide signifie que cela ne s'exécute qu'au montage
 
   const fetchProducts = async () => {
     try {
@@ -40,6 +56,9 @@ function Home() {
       console.error("Erreur lors de la récupération des produits:", err); 
     }
   };
+
+  // Vérifier si l'utilisateur est connecté de manière sécurisée
+  const isLoggedIn = !!user;
 
   // Gestion du clic sur un produit avec MessageBox si non connecté
   const handleProductClick = () => {
@@ -66,14 +85,12 @@ function Home() {
 
       {/* HERO SECTION */}
       <section className="relative text-center py-24 overflow-hidden">
-        {/* Conteneur de l'image d'arrière-plan */}
         <div className="absolute inset-0 z-0">
           <img 
             src="/images/Maison.jpg" 
             alt="Intérieur maison" 
             className="w-full h-full object-cover scale-110" 
           />
-          {/* Voile léger pour faire ressortir le texte */}
           <div className="absolute inset-0 bg-white/40"></div>
         </div>
 
