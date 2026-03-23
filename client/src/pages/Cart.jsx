@@ -11,9 +11,6 @@ import {
   ArrowLeft 
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
-import API from "../api"; // adapte selon ton import
 
 function Cart() {
   const [cart, setCart] = useState([]);
