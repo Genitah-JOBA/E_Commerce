@@ -27,15 +27,26 @@ function Login({ onSwitch }) {
     }, 10);
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Dans votre fonction de connexion
+  const handleLogin = async (email, password) => {
     try {
-      const res = await API.post("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      navigate("/admin");
-    } catch (err) {
-      triggerError("Email ou mot de passe incorrect", emailRef);
+      const response = await loginApi(email, password);
+      if (response.data && response.data.user) {
+        // Vérifiez la structure de l'utilisateur
+        console.log("User structure:", response.data.user);
+        
+        // Assurez-vous que username existe
+        const userToStore = {
+          ...response.data.user,
+          username: response.data.user.username || response.data.user.name || "Aura Client"
+        };
+        
+        localStorage.setItem("user", JSON.stringify(userToStore));
+        localStorage.setItem("token", response.data.token);
+        setCurrentUser(userToStore);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
     }
   };
 

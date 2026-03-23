@@ -9,31 +9,17 @@ import {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Ajout de l'état de chargement
+  const [showLogoutModal, setShowLogoutModal] = useState(false); // État pour la MessageBox
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        console.log("User data from localStorage:", userData);
-        setCurrentUser(userData);
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        localStorage.removeItem("user");
+      const userData = JSON.parse(storedUser);
+      console.log("User data from localStorage:", userData); // Ajoutez ce log
+      setCurrentUser(userData);
       }
-    }
-    setIsLoading(false); // Fin du chargement
   }, []);
-
-  // Empêcher l'ouverture du menu pendant le chargement
-  const toggleMenu = () => {
-    if (!isLoading) {
-      setIsOpen(!isOpen);
-    }
-  };
 
   const isAdmin = currentUser && currentUser.role === "admin";
 
@@ -45,6 +31,8 @@ const Navbar = () => {
     setShowLogoutModal(false);
     navigate("/auth");
   };
+
+  const toggleMenu = () => setIsOpen(!isOpen);
 
   // Styles communs : ajout de cursor-pointer
   const linkClass = "flex items-center gap-2 hover:text-[#f3e6d8] transition-colors duration-300 py-2 md:py-0 cursor-pointer";
@@ -124,7 +112,7 @@ const Navbar = () => {
           {currentUser ? (
             <div className="flex items-center gap-4">
               <span className="italic font-medium text-sm text-black">
-                {currentUser.username || currentUser.username || "Aura Client"}
+                {currentUser?.username || currentUser?.name || "Aura Client"}
               </span>
               <button onClick={() => setShowLogoutModal(true)} className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md cursor-pointer">
                 <LogOut size={16} /> Déconnexion
