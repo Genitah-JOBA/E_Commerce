@@ -9,17 +9,31 @@ import {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [showLogoutModal, setShowLogoutModal] = useState(false); // État pour la MessageBox
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Ajout de l'état de chargement
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      console.log("User data from localStorage:", userData); // Ajoutez ce log
-      setCurrentUser(userData);
+      try {
+        const userData = JSON.parse(storedUser);
+        console.log("User data from localStorage:", userData);
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        localStorage.removeItem("user");
       }
+    }
+    setIsLoading(false); // Fin du chargement
   }, []);
+
+  // Empêcher l'ouverture du menu pendant le chargement
+  const toggleMenu = () => {
+    if (!isLoading) {
+      setIsOpen(!isOpen);
+    }
+  };
 
   const isAdmin = currentUser && currentUser.role === "admin";
 
@@ -31,8 +45,6 @@ const Navbar = () => {
     setShowLogoutModal(false);
     navigate("/auth");
   };
-
-  const toggleMenu = () => setIsOpen(!isOpen);
 
   // Styles communs : ajout de cursor-pointer
   const linkClass = "flex items-center gap-2 hover:text-[#f3e6d8] transition-colors duration-300 py-2 md:py-0 cursor-pointer";
@@ -134,48 +146,37 @@ const Navbar = () => {
       </div>
 
       {/* --- MOBILE MENU --- */}
-<AnimatePresence>
-  {isOpen && (
-    <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      className="md:hidden bg-[#ada194] overflow-hidden border-t border-[#bcafa1]"
-    >
-      <div className="flex flex-col p-4 space-y-4 text-black font-medium">
-        {/* Liens mobiles avec cursor-pointer */}
-        {!isAdmin && <Link to="/" onClick={toggleMenu} className={linkClass}>Accueil</Link>}
-        
-        {/* Vérification sécurisée pour currentUser */}
-        {currentUser && currentUser.username ? (
-          <>
-            <span className="italic px-2">{currentUser.username}</span>
-            <button 
-              onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"
-            >
-              <LogOut size={18} /> Déconnexion
-            </button>
-          </>
-        ) : currentUser && !currentUser.username ? (
-          <>
-            <span className="italic px-2">Aura Client</span>
-            <button 
-              onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
-              className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"
-            >
-              <LogOut size={18} /> Déconnexion
-            </button>
-          </>
-        ) : (
-          <Link to="/auth" onClick={toggleMenu} className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f3e6d8] text-black rounded-md font-bold cursor-pointer">
-            Connexion
-          </Link>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden bg-[#ada194] overflow-hidden border-t border-[#bcafa1]"
+          >
+            <div className="flex flex-col p-4 space-y-4 text-black font-medium">
+              {/* Liens mobiles avec cursor-pointer */}
+              {!isAdmin && <Link to="/" onClick={toggleMenu} className={linkClass}>Accueil</Link>}
+              
+              {currentUser ? (
+                <>
+                  <span className="italic px-2">{currentUser.username || "Aura Client"}</span>
+                  <button 
+                    onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"
+                  >
+                    <LogOut size={18} /> Déconnexion
+                  </button>
+                </>
+              ) : (
+                <Link to="/auth" onClick={toggleMenu} className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f3e6d8] text-black rounded-md font-bold cursor-pointer">
+                  Connexion
+                </Link>
+              )}
+            </div>
+          </motion.div>
         )}
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+      </AnimatePresence>
     </motion.nav>
   );
 };
