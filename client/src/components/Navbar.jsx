@@ -9,7 +9,7 @@ import {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [showLogoutModal, setShowLogoutModal] = useState(false); // État pour la MessageBox
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,7 +32,6 @@ const Navbar = () => {
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  // Styles communs : ajout de cursor-pointer
   const linkClass = "flex items-center gap-2 hover:text-[#f3e6d8] transition-colors duration-300 py-2 md:py-0 cursor-pointer";
 
   return (
@@ -42,7 +41,7 @@ const Navbar = () => {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="sticky top-0 z-50 bg-[#ada194] text-white p-4 shadow-lg"
     >
-      {/* --- MESSAGEBOX DE DÉCONNEXION --- */}
+      {/* Modal de déconnexion */}
       <AnimatePresence>
         {showLogoutModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -85,28 +84,34 @@ const Navbar = () => {
 
         {/* --- DESKTOP NAVIGATION --- */}
         <div className="hidden md:flex text-black space-x-6 font-medium items-center">
-          {!isAdmin && (
+          {/* Liens pour tous les utilisateurs connectés ou non */}
+          {!isAdmin && !currentUser && (
+            <Link to="/" className={linkClass}><Home size={18} /> Accueil</Link>
+          )}
+          
+          {isAdmin && (
             <Link to="/" className={linkClass}><Home size={18} /> Accueil</Link>
           )}
 
-          {currentUser && (
-            isAdmin ? (
-              <>
-                <Link to="/" className={linkClass}><Home size={18} /> Accueil</Link>
-                <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition cursor-pointer">
-                  <LayoutDashboard size={18} /> Dashboard
-                </Link>
-                <Link to="/admin/orders" className={linkClass}><ClipboardList size={18} /> Commandes</Link>
-              </>
-            ) : (
-              <>
-                <Link to="/products" className={linkClass}><Package size={18} /> Produits</Link>
-                <Link to="/cart" className={linkClass}><ShoppingCart size={18} /> Panier</Link>
-                <Link to="/order" className={linkClass}><History size={18} /> Historique</Link>
-              </>
-            )
+          {/* Liens selon le rôle */}
+          {currentUser && isAdmin && (
+            <>
+              <Link to="/admin" className="flex items-center gap-1 font-bold text-[#3f1117] hover:scale-105 transition cursor-pointer">
+                <LayoutDashboard size={18} /> Dashboard
+              </Link>
+              <Link to="/admin/orders" className={linkClass}><ClipboardList size={18} /> Commandes</Link>
+            </>
           )}
 
+          {currentUser && !isAdmin && (
+            <>
+              <Link to="/products" className={linkClass}><Package size={18} /> Produits</Link>
+              <Link to="/cart" className={linkClass}><ShoppingCart size={18} /> Panier</Link>
+              <Link to="/order" className={linkClass}><History size={18} /> Historique</Link>
+            </>
+          )}
+
+          {/* Zone utilisateur connecté / déconnecté */}
           {currentUser ? (
             <div className="flex items-center gap-4">
               <span className="italic font-medium text-sm text-black">
@@ -131,7 +136,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* --- MOBILE MENU --- */}
+      {/* --- MOBILE MENU - CORRIGÉ POUR ÊTRE IDENTIQUE AU DESKTOP --- */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -140,23 +145,75 @@ const Navbar = () => {
             exit={{ height: 0, opacity: 0 }}
             className="md:hidden bg-[#ada194] overflow-hidden border-t border-[#bcafa1]"
           >
-            <div className="flex flex-col p-4 space-y-4 text-black font-medium">
-              {/* Liens mobiles avec cursor-pointer */}
-              {!isAdmin && <Link to="/" onClick={toggleMenu} className={linkClass}>Accueil</Link>}
+            <div className="flex flex-col p-4 space-y-3 text-black font-medium">
               
+              {/* Accueil - visible pour tous sauf admin connecté ? À adapter selon vos besoins */}
+              {!isAdmin && (
+                <Link to="/" onClick={toggleMenu} className={linkClass}>
+                  <Home size={18} /> Accueil
+                </Link>
+              )}
+              
+              {isAdmin && (
+                <Link to="/" onClick={toggleMenu} className={linkClass}>
+                  <Home size={18} /> Accueil
+                </Link>
+              )}
+
+              {/* Liens admin */}
+              {currentUser && isAdmin && (
+                <>
+                  <Link to="/admin" onClick={toggleMenu} className={linkClass}>
+                    <LayoutDashboard size={18} /> Dashboard
+                  </Link>
+                  <Link to="/admin/orders" onClick={toggleMenu} className={linkClass}>
+                    <ClipboardList size={18} /> Commandes
+                  </Link>
+                </>
+              )}
+
+              {/* Liens client connecté */}
+              {currentUser && !isAdmin && (
+                <>
+                  <Link to="/products" onClick={toggleMenu} className={linkClass}>
+                    <Package size={18} /> Produits
+                  </Link>
+                  <Link to="/cart" onClick={toggleMenu} className={linkClass}>
+                    <ShoppingCart size={18} /> Panier
+                  </Link>
+                  <Link to="/order" onClick={toggleMenu} className={linkClass}>
+                    <History size={18} /> Historique
+                  </Link>
+                </>
+              )}
+
+              {/* Séparateur si utilisateur connecté */}
+              {currentUser && (
+                <div className="border-t border-[#bcafa1] my-2" />
+              )}
+
+              {/* Zone utilisateur connecté / déconnecté */}
               {currentUser ? (
                 <>
-                  <span className="italic px-2">{currentUser.name || "Aura Client"}</span>
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <span className="italic font-medium text-sm">
+                      {currentUser.username || currentUser.name || "Aura Client"}
+                    </span>
+                  </div>
                   <button 
                     onClick={() => { setShowLogoutModal(true); setIsOpen(false); }} 
-                    className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-4 py-3 bg-black text-white rounded-md cursor-pointer w-full"
                   >
                     <LogOut size={18} /> Déconnexion
                   </button>
                 </>
               ) : (
-                <Link to="/auth" onClick={toggleMenu} className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f3e6d8] text-black rounded-md font-bold cursor-pointer">
-                  Connexion
+                <Link 
+                  to="/auth" 
+                  onClick={toggleMenu} 
+                  className="flex items-center justify-center gap-2 px-4 py-3 bg-[#f3e6d8] text-black rounded-md font-bold cursor-pointer w-full"
+                >
+                  <User size={18} /> Connexion
                 </Link>
               )}
             </div>
